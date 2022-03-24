@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "photo-editor",
+    "slug": "photo-editor",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "photo-editor"
+}
