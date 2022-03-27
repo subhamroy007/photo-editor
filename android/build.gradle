@@ -6,6 +6,7 @@ buildscript {
         minSdkVersion = 21
         compileSdkVersion = 30
         targetSdkVersion = 30
+        reactNativeFFmpegPackage = "full-gpl-lts"
     }
     repositories {
         google()
@@ -30,6 +31,11 @@ allprojects {
         maven {
             // Android JSC is installed from npm
             url(new File(["node", "--print", "require.resolve('jsc-android/package.json')"].execute(null, rootDir).text.trim(), "../dist"))
+        }
+
+        maven {
+            // expo-camera bundles a custom com.google.android:cameraview
+            url "$rootDir/../node_modules/expo-camera/android/maven"
         }
 
         google()
