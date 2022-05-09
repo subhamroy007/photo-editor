@@ -1,5 +1,6 @@
 import CameraRoll from "@react-native-community/cameraroll";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { PermissionsAndroid } from "react-native";
 import { MediaParams } from "../constants/types";
 
 export type LocalMediaParams = {
@@ -11,6 +12,8 @@ export type LocalMediaHookState = {
   media: LocalMediaParams[];
   isLoading: boolean;
   isError: boolean;
+  hasReadPermission: boolean;
+  hasWritePermission: boolean;
 };
 
 export function useLocalMedia(type: "All" | "Photos" | "Videos") {
@@ -19,9 +22,46 @@ export function useLocalMedia(type: "All" | "Photos" | "Videos") {
     media: [],
     isError: false,
     isLoading: false,
+    hasReadPermission: false,
+    hasWritePermission: false,
   });
 
+  useEffect(() => {
+    const prepare = async () => {
+      let readPermission = PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+      let writePermission =
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+
+      let readPermissionStatus = await PermissionsAndroid.check(readPermission);
+
+      let writePermissionStatus = await PermissionsAndroid.check(
+        writePermission
+      );
+
+      if (!readPermissionStatus) {
+        readPermissionStatus =
+          (await PermissionsAndroid.request(readPermission)) === "granted";
+      }
+
+      if (!writePermissionStatus) {
+        writePermissionStatus =
+          (await PermissionsAndroid.request(writePermission)) === "granted";
+      }
+
+      setState((prevState) => ({
+        ...prevState,
+        hasReadPermission: readPermissionStatus,
+        hasWritePermission: writePermissionStatus,
+      }));
+    };
+    prepare();
+  }, []);
+
   const fetchMedia = useCallback(async () => {
+    if (!state.hasReadPermission) {
+      return;
+    }
+
     try {
       setState((prevState) => ({ ...prevState, isLoading: true }));
 
@@ -63,7 +103,7 @@ export function useLocalMedia(type: "All" | "Photos" | "Videos") {
         isLoading: false,
       }));
     }
-  }, [type]);
+  }, [type, state.hasReadPermission]);
 
   return { ...state, fetchMedia };
 }
