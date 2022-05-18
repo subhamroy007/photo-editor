@@ -162,13 +162,7 @@ export function PhotoUploadDetails({
     <AppContainer stretchToFill={true} selfAlignment="stretch">
       <StatusBar hidden={true} />
       <AppHeader
-        leftContainerChild={
-          <AppIcon
-            name="left-arrow"
-            foreground="black"
-            onPress={onLeftArrowPress}
-          />
-        }
+        leftContainerChild={<AppIcon name="left-arrow" foreground="black" />}
         middleContainerChild={
           <AppLabel
             text="Details"
@@ -281,7 +275,6 @@ export function PhotoUploadDetails({
             name={state.taggedLocation ? "cross" : "create"}
             size="small"
             foreground="black"
-            onPress={opneAddLocationModal}
           />
         </AppContainer>
         <AppLabel
@@ -291,7 +284,6 @@ export function PhotoUploadDetails({
           styleProp={styles.advancedOptionLabel}
           selfAlignment="start"
           hasUnderline={true}
-          onPress={openAdvancedOptionModal}
         />
       </ScrollView>
       <AppLabel
@@ -305,7 +297,6 @@ export function PhotoUploadDetails({
         selfAlignment="stretch"
         style="medium"
         styleProp={styles.postLabel}
-        onPress={onPost}
       />
       {state.isAddLocationModalOpen && (
         <AppModal title="Add Location" onClose={closeAddLocationModal}>

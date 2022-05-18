@@ -1,95 +1,153 @@
 import { useLayout } from "@react-native-community/hooks";
-import { useCallback } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { ReactNode, useCallback } from "react";
+import { Easing, StyleProp, Vibration, ViewStyle } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { AppPressableProps } from "../../constants/types";
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+export type AppPressableProps = {
+  children: ReactNode;
+  disableTap?: boolean;
+  disableLongPress?: boolean;
+  onTap?: () => void;
+  onLongPress?: () => void;
+  vibrateOnLongPress?: boolean;
+  overlayColor?: string;
+  styleProp?: StyleProp<ViewStyle>;
+  animateOnTap?: boolean;
+  animateOnLongPress?: boolean;
+  animateOnTouch?: boolean;
+};
 
 export function AppPressable({
   children,
-  isAnimated,
-  onPress,
+  disableLongPress,
+  disableTap,
+  onLongPress,
+  onTap,
+  vibrateOnLongPress,
+  overlayColor,
   styleProp,
-  activeOverlayColor,
-  disabled,
+  animateOnTap,
+  animateOnLongPress,
+  animateOnTouch,
 }: AppPressableProps) {
-  const isPressed = useSharedValue(false);
+  const isPressedIn = useSharedValue(false);
+  const isTapped = useSharedValue(false);
+  const isLongPressed = useSharedValue(false);
 
-  const { height, width, onLayout } = useLayout();
+  const toggleIsPressedIn = useCallback(() => {
+    isPressedIn.value = !isPressedIn.value;
+  }, []);
 
-  const onPressed = useCallback(() => {
-    isPressed.value = false;
+  const toggleisTapped = useCallback(() => {
+    isTapped.value = !isTapped.value;
+  }, []);
 
-    if (onPress) {
-      onPress();
+  const toggleIsLongPressed = useCallback(() => {
+    isLongPressed.value = !isLongPressed.value;
+  }, []);
+
+  const longPrssHandler = useCallback(() => {
+    if (vibrateOnLongPress) {
+      Vibration.vibrate(40);
     }
-  }, [onPress]);
+    if (onLongPress) {
+      onLongPress();
+    }
+    toggleIsLongPressed();
+  }, [onLongPress, vibrateOnLongPress]);
 
-  const onPressIn = useCallback(() => {
-    isPressed.value = true;
-  }, []);
+  const tapHandler = useCallback(() => {
+    if (onTap) {
+      onTap();
+    }
+    toggleisTapped();
+  }, [onTap]);
 
-  const onPressOut = useCallback(() => {
-    isPressed.value = false;
-  }, []);
+  const longPressGesture = Gesture.LongPress()
+    .enabled(disableLongPress === undefined ? true : !disableLongPress)
+    .onStart(longPrssHandler)
+    .shouldCancelWhenOutside(true)
+    .minDuration(400);
 
-  const animatedContentContainerStyle = useAnimatedStyle(
-    () => ({
+  const tapGesture = Gesture.Tap()
+    .enabled(disableTap === undefined ? true : !disableTap)
+    .onStart(tapHandler)
+    .shouldCancelWhenOutside(true)
+    .onTouchesDown(toggleIsPressedIn)
+    .onTouchesCancelled(toggleIsPressedIn)
+    .onTouchesUp(toggleIsPressedIn)
+    .maxDuration(disableLongPress === true ? 100000 : 400);
+
+  const compoundGesture = Gesture.Exclusive(tapGesture, longPressGesture);
+
+  const { onLayout, width, height } = useLayout();
+
+  const overlatStyle = useAnimatedStyle(() => {
+    return {
+      zIndex: isPressedIn.value ? 10 : -10,
+      opacity: isPressedIn.value ? 0.4 : 0,
+    };
+  });
+
+  const containerStyle = useAnimatedStyle(() => {
+    return {
       transform: [
         {
-          scale: isAnimated
-            ? withTiming(isPressed.value ? 0.8 : 1, { duration: 200 })
-            : 1,
+          scale:
+            animateOnTap && isTapped.value
+              ? withSequence(
+                  withTiming(0.8, { duration: 200 }),
+                  withTiming(1, { duration: 200 }, () => {
+                    runOnJS(toggleisTapped)();
+                  })
+                )
+              : animateOnLongPress && isLongPressed.value
+              ? withSequence(
+                  withTiming(0.8, { duration: 200 }),
+                  withTiming(1, { duration: 200 }, () => {
+                    runOnJS(toggleIsLongPressed)();
+                  })
+                )
+              : animateOnTouch
+              ? withTiming(isPressedIn.value ? 0.8 : 1, { duration: 200 })
+              : 1,
         },
       ],
-    }),
-    [isAnimated]
-  );
-
-  const animatedOverlayStyle = useAnimatedStyle(
-    () => ({
-      backgroundColor: activeOverlayColor,
-      zIndex: isPressed.value ? 5 : -5,
-      opacity: isPressed.value ? 0.4 : 0,
-      width,
-      height,
-    }),
-    [activeOverlayColor, width, height]
-  );
+    };
+  }, [
+    toggleisTapped,
+    toggleIsLongPressed,
+    animateOnTap,
+    animateOnTouch,
+    animateOnLongPress,
+  ]);
 
   return (
-    <AnimatedPressable
-      onPress={onPressed}
-      onPressIn={onPressIn}
-      onPressOut={onPressOut}
-      style={[
-        styles.contentContainer,
-        styleProp,
-        animatedContentContainerStyle,
-      ]}
-      disabled={disabled}
-      onLayout={onLayout}
-    >
-      {children}
-      {activeOverlayColor && (
-        <Animated.View style={[styles.overlay, animatedOverlayStyle]} />
-      )}
-    </AnimatedPressable>
+    <GestureDetector gesture={compoundGesture}>
+      <Animated.View style={[styleProp, containerStyle]} onLayout={onLayout}>
+        {children}
+        {overlayColor && (
+          <Animated.View
+            style={[
+              styleProp,
+              {
+                backgroundColor: overlayColor,
+                width,
+                height,
+                position: "absolute",
+              },
+              overlatStyle,
+            ]}
+          />
+        )}
+      </Animated.View>
+    </GestureDetector>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    position: "absolute",
-  },
-  contentContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    flexWrap: "nowrap",
-  },
-});

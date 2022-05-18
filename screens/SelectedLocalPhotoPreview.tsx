@@ -75,13 +75,7 @@ export function SelectedLocalPhotoPreview({
         renderItem={renderPhotos}
       />
       <AppHeader
-        leftContainerChild={
-          <AppIcon
-            name="left-arrow"
-            onPress={onLeftArrowPress}
-            foreground="white"
-          />
-        }
+        leftContainerChild={<AppIcon name="left-arrow" foreground="white" />}
         float={true}
       />
     </AppContainer>

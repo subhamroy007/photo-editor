@@ -213,7 +213,7 @@ export interface EffectTabState {
   hasError: boolean;
 }
 
-export type ContentCategory = "story" | "photo" | "video" | "shorts" | "story";
+export type ContentType = "PHOTO" | "VIDEO" | "STORY" | "SHORTS";
 
 export type Resolution = {
   width: number;
@@ -238,8 +238,6 @@ export type AppLabelProps = {
   type?: "solid" | "outline";
   selfAlignment?: "stretch" | "center" | "start" | "end";
   borderSize?: "small" | "large";
-  bounces?: boolean;
-  onPress?: () => void;
   background?: string;
   foreground?: string;
   styleProp?: StyleProp<ViewStyle>;
@@ -253,8 +251,6 @@ export type AppIconProps = {
   borderSize?: "small" | "large";
   background?: string;
   foreground?: string;
-  bounces?: boolean;
-  onPress?: () => void;
   styleProp?: StyleProp<ViewStyle>;
 };
 
@@ -287,6 +283,7 @@ export type AppContainerProps = {
   borderTopWidth?: number;
   borderRadius?: number;
   borderTopRadius?: number;
+  borderBottomRadius?: number;
   wrapContent?: boolean;
   contentOrientation?: "row" | "column";
   majorAxisAlignment?:
@@ -322,4 +319,26 @@ export type AccountShortResponse = {
     height: number;
   };
   hasUnseenStory: boolean;
+};
+
+export type ImageParams = {
+  uri: string;
+  width: number;
+  height: number;
+};
+
+export type LocalMediaParams = {
+  duration: number | null;
+  time: string;
+  album: string;
+  thumbnailUri: string | null;
+} & ImageParams;
+
+export type LocalMediaHookState = {
+  albums: string[];
+  media: LocalMediaParams[];
+  isLoading: boolean;
+  isError: boolean;
+  hasReadPermission: boolean;
+  hasWritePermission: boolean;
 };

@@ -42,3 +42,19 @@ export const SIZE_13 = Math.round(SCREEN_WIDTH / 9); //40px for 360px;
 export const SIZE_14 = Math.round(SCREEN_WIDTH / 12); //30px for 360px;
 
 export const SIZE_15 = Math.round(SCREEN_WIDTH / 8); //45px for 360px;
+
+export const SIZE_16 = Math.round(SCREEN_WIDTH / 4); //90px for 360px
+
+export const SIZE_17 = Math.round(SCREEN_WIDTH / 4.5); //80px for 360px
+
+export const SIZE_18 = Math.round(SCREEN_WIDTH / 3.6); //100px for 360px
+
+export const SIZE_19 = Math.round(SCREEN_WIDTH * 1.2); //400px for 360px
+
+export const SIZE_20 = Math.round(SCREEN_WIDTH / 6); //60px for 360px
+
+export const SIZE_21 = Math.round(SCREEN_WIDTH / 7.5); //48px for 360px
+
+export const SIZE_22 = Math.round(SCREEN_WIDTH / 13); //27px for 360px
+
+export const DAY_IN_MILISECONDS = 3600 * 1000;

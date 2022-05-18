@@ -1,78 +1,73 @@
 import React, { useCallback } from "react";
-import { StyleSheet } from "react-native";
-import FastImage from "react-native-fast-image";
+import { Image, StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
-import { SIZE_1, SIZE_8, SIZE_9 } from "../../constants/constants";
-import { MediaParams } from "../../constants/types";
+import { SIZE_16 } from "../../constants/constants";
+import { ImageParams, LocalMediaParams } from "../../constants/types";
 import { AppContainer } from "../utility/AppContainer";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
+import { AppPressable } from "../utility/AppPressable";
 
 export type PhotoListItemProps = {
-  index: number;
+  styeProp: StyleProp<ViewStyle>;
   selectionIndex: number;
   isMultiSelectable: boolean;
-  onSelect: (index: number) => void;
-} & MediaParams;
+  onSelect: (image: LocalMediaParams) => void;
+  onMultiSelect: (image: LocalMediaParams) => void;
+  image: LocalMediaParams;
+};
 
 export const PhotoListItem = React.memo<PhotoListItemProps>(
-  ({ uri, index, isMultiSelectable, selectionIndex, onSelect }) => {
-    const onPress = useCallback(() => {
-      onSelect(index);
-    }, [onSelect, index]);
+  ({
+    image,
+    isMultiSelectable,
+    selectionIndex,
+    onSelect,
+    styeProp,
+    onMultiSelect,
+  }) => {
+    const onTap = useCallback(() => {
+      onSelect(image);
+    }, [onSelect, image]);
+
+    const onLongPress = useCallback(() => {
+      onMultiSelect(image);
+    }, [onMultiSelect, image]);
 
     return (
-      <AppContainer
-        width={SIZE_1}
-        height={SIZE_1}
-        paddingBottom={StyleSheet.hairlineWidth * 2}
-        paddingTop={StyleSheet.hairlineWidth * 2}
-        paddingLeft={index % 3 > 0 ? StyleSheet.hairlineWidth * 2 : 0}
-        paddingRight={index % 3 < 2 ? StyleSheet.hairlineWidth * 2 : 0}
-        onPress={onPress}
+      <AppPressable
+        onTap={onTap}
+        disableLongPress={isMultiSelectable}
+        vibrateOnLongPress={true}
+        onLongPress={onLongPress}
       >
-        <FastImage
-          source={{ cache: "immutable", priority: "high", uri }}
-          resizeMode="cover"
-          style={styles.photo}
-        />
-        {selectionIndex >= 0 && (
-          <Animated.View
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(0, 0, 0, 0.4)",
-            }}
-            entering={ZoomIn.duration(200)}
-            exiting={ZoomOut.duration(200)}
-          >
-            <AppIcon name="tick" size="medium" />
-          </Animated.View>
-        )}
-        {isMultiSelectable && (
-          <AppContainer
-            backgroundColor={selectionIndex >= 0 ? "#3f71f2" : "transparent"}
-            borderRadius={SIZE_9 / 2}
-            width={SIZE_9}
-            height={SIZE_9}
-            styleProp={styles.selectionCounter}
-            borderWidth={2 * StyleSheet.hairlineWidth}
-            borderColor="white"
-            majorAxisAlignment="center"
-            minorAxisAlignment="center"
-          >
-            {selectionIndex >= 0 && <AppLabel text={selectionIndex + 1 + ""} />}
-          </AppContainer>
-        )}
-      </AppContainer>
+        <AppContainer width={SIZE_16} height={SIZE_16} styleProp={styeProp}>
+          <Image
+            source={{ ...image }}
+            resizeMode="cover"
+            style={styles.photo}
+            fadeDuration={0}
+          />
+          {selectionIndex >= 0 && (
+            <Animated.View
+              style={styles.overlay}
+              entering={ZoomIn.duration(200)}
+              exiting={ZoomOut.duration(200)}
+            >
+              {!isMultiSelectable ? (
+                <AppIcon name="tick" size="small" />
+              ) : (
+                <AppLabel text={selectionIndex + 1 + ""} size="large" />
+              )}
+            </Animated.View>
+          )}
+        </AppContainer>
+      </AppPressable>
     );
   },
   (prevProps, nextProps) => {
     return (
-      prevProps.uri === nextProps.uri &&
+      prevProps.image === nextProps.image &&
       prevProps.isMultiSelectable === nextProps.isMultiSelectable &&
       prevProps.selectionIndex === nextProps.selectionIndex &&
       prevProps.onSelect === nextProps.onSelect
@@ -84,7 +79,7 @@ const styles = StyleSheet.create({
   photo: {
     width: "100%",
     height: "100%",
-    backgroundColor: "grey",
+    backgroundColor: "#e1e1e1",
   },
   overlay: {
     position: "absolute",
@@ -94,5 +89,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  selectionCounter: { position: "absolute", top: SIZE_8, right: SIZE_8 },
 });

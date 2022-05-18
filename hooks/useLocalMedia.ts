@@ -1,22 +1,9 @@
 import CameraRoll from "@react-native-community/cameraroll";
 import { useCallback, useEffect, useState } from "react";
 import { PermissionsAndroid } from "react-native";
-import { MediaParams } from "../constants/types";
+import { LocalMediaHookState, LocalMediaParams } from "../constants/types";
 
-export type LocalMediaParams = {
-  album: string;
-} & MediaParams;
-
-export type LocalMediaHookState = {
-  albums: string[];
-  media: LocalMediaParams[];
-  isLoading: boolean;
-  isError: boolean;
-  hasReadPermission: boolean;
-  hasWritePermission: boolean;
-};
-
-export function useLocalMedia(type: "All" | "Photos" | "Videos") {
+export function useLocalMedia() {
   const [state, setState] = useState<LocalMediaHookState>({
     albums: [],
     media: [],
@@ -65,9 +52,9 @@ export function useLocalMedia(type: "All" | "Photos" | "Videos") {
     try {
       setState((prevState) => ({ ...prevState, isLoading: true }));
 
-      const albums = await CameraRoll.getAlbums({ assetType: type });
+      const albums = await CameraRoll.getAlbums({ assetType: "All" });
 
-      let albumTitles: string[] = [];
+      let albumTitles = ["Gallery"];
       let albumMediaCount = 0;
 
       albums.forEach((album) => {
@@ -75,25 +62,33 @@ export function useLocalMedia(type: "All" | "Photos" | "Videos") {
         albumMediaCount += album.count;
       });
 
-      const photos = await CameraRoll.getPhotos({
-        first: 30,
-        assetType: type,
+      const mediaListResult = await CameraRoll.getPhotos({
+        first: 100,
+        assetType: "All",
         groupTypes: "All",
-        include: ["imageSize"],
+        include: ["imageSize", "playableDuration"],
         mimeTypes: ["image/jpeg", "image/png", "video/mp4"],
       });
 
-      let albumPhotos = photos.edges.map<LocalMediaParams>((photo) => ({
-        album: photo.node.group_name,
-        duration: photo.node.image.playableDuration,
-        uri: photo.node.image.uri,
-        height: photo.node.image.height,
-        width: photo.node.image.width,
-      }));
+      const mediaList: LocalMediaParams[] = [];
+
+      mediaListResult.edges.forEach((item) => {
+        const mediaItem: LocalMediaParams = {
+          album: item.node.group_name,
+          height: item.node.image.height,
+          uri: item.node.image.uri,
+          width: item.node.image.width,
+          duration: item.node.image.playableDuration!,
+          time: item.node.timestamp + "",
+        };
+
+        mediaList.push(mediaItem);
+      });
+
       setState((prevState) => ({
         ...prevState,
         albums: albumTitles,
-        media: albumPhotos,
+        media: mediaList,
         isLoading: false,
       }));
     } catch (e: any) {
@@ -103,7 +98,7 @@ export function useLocalMedia(type: "All" | "Photos" | "Videos") {
         isLoading: false,
       }));
     }
-  }, [type, state.hasReadPermission]);
+  }, [state.hasReadPermission]);
 
   return { ...state, fetchMedia };
 }

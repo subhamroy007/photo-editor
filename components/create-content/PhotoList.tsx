@@ -5,18 +5,19 @@ import {
   StatusBar,
   StyleSheet,
 } from "react-native";
-import { SIZE_1, SIZE_14, SIZE_6 } from "../../constants/constants";
+import { SIZE_15, SIZE_16, SIZE_6 } from "../../constants/constants";
 import { AppIcon } from "../utility/AppIcon";
 import { AppContainer } from "../utility/AppContainer";
 import { AppLabel } from "../utility/AppLabel";
 import { AppHeader } from "../utility/AppHeader";
-import { MediaParams } from "../../constants/types";
+import { ImageParams } from "../../constants/types";
 import { PhotoListItem } from "./PhotoListItem";
 import { LocalMediaParams, useLocalMedia } from "../../hooks/useLocalMedia";
 import { AppAvatar } from "../utility/AppAvatar";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackNavigationParams } from "../../navigators/RootStackNavigator";
 import { useNavigation } from "@react-navigation/native";
+import { AppPressable } from "../utility/AppPressable";
 
 type ScreenProps = NativeStackScreenProps<
   RootStackNavigationParams,
@@ -24,8 +25,8 @@ type ScreenProps = NativeStackScreenProps<
 >;
 
 export type PhotoListState = {
-  selectedPhotoIndices: number[];
-  selectedAlbumIndex: number;
+  selectedPhotos: ImageParams[];
+  selectedAlbum: string;
   isMultiSelectable: boolean;
   isAlbumSwitchModalOpen: boolean;
 };
@@ -36,8 +37,8 @@ export function PhotoList() {
   const [state, setState] = useState<PhotoListState>({
     isMultiSelectable: false,
     isAlbumSwitchModalOpen: false,
-    selectedAlbumIndex: -1,
-    selectedPhotoIndices: [],
+    selectedAlbum: "",
+    selectedPhotos: [],
   });
 
   const { albums, fetchMedia, isError, isLoading, media } =
@@ -52,10 +53,10 @@ export function PhotoList() {
       return {
         ...prevState,
         isMultiSelectable: !prevState.isMultiSelectable,
-        selectedPhotoIndices:
-          prevState.selectedPhotoIndices.length === 0
+        selectedPhotos:
+          prevState.selectedPhotos.length === 0
             ? []
-            : [prevState.selectedPhotoIndices[0]],
+            : [prevState.selectedPhotos[0]],
       };
     });
   }, []);
@@ -67,41 +68,30 @@ export function PhotoList() {
     }));
   }, []);
 
-  const onAlbumSelect = useCallback((index: number) => {
+  const onAlbumSelect = useCallback((value: string) => {
     setState((prevState) => ({
       ...prevState,
-      selectedAlbumIndex: index,
+      selectedAlbum: value,
       isAlbumSwitchModalOpen: false,
     }));
   }, []);
 
-  const getItemLayout = useCallback(
-    (data: MediaParams[] | null | undefined, index: number) => {
-      return {
-        index,
-        length: SIZE_1,
-        offset: index * SIZE_1,
-      };
-    },
-    []
-  );
-
-  const onSelect = useCallback((index: number) => {
+  const onSelect = useCallback((image: ImageParams) => {
     setState((prevState) => {
-      const selectionIndex = prevState.selectedPhotoIndices.findIndex(
-        (item) => item === index
+      const selectionIndex = prevState.selectedPhotos.findIndex(
+        (item) => item.uri === image.uri
       );
 
       if (selectionIndex === -1) {
         if (!prevState.isMultiSelectable) {
           return {
             ...prevState,
-            selectedPhotoIndices: [index],
+            selectedPhotos: [image],
           };
-        } else if (prevState.selectedPhotoIndices.length < 10) {
+        } else if (prevState.selectedPhotos.length < 10) {
           return {
             ...prevState,
-            selectedPhotoIndices: [...prevState.selectedPhotoIndices, index],
+            selectedPhotos: [...prevState.selectedPhotos, image],
           };
         } else {
           return {
@@ -111,59 +101,89 @@ export function PhotoList() {
       } else {
         return {
           ...prevState,
-          selectedPhotoIndices: prevState.selectedPhotoIndices.filter(
-            (item) => item !== index
+          selectedPhotos: prevState.selectedPhotos.filter(
+            (item) => item.uri !== image.uri
           ),
         };
       }
     });
   }, []);
 
+  const onMultiSelect = useCallback((image: ImageParams) => {
+    setState((prevState) => ({
+      ...prevState,
+      isMultiSelectable: true,
+      selectedPhotos: [image],
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (albums.length > 0) {
+      setState((prevState) => ({
+        ...prevState,
+        selectedAlbum: albums[0],
+        selectedPhotos: [media[0]],
+      }));
+    }
+  }, [albums, media, onAlbumSelect, onSelect]);
+
+  // const onAvatarPress = useCallback(() => {
+  //   const selectedPhotos = state.selectedPhotoIndices.map(
+  //     (index) => media[index]
+  //   );
+  //   navigation.navigate("SelectedLocalPhotoPreview", { list: selectedPhotos });
+  // }, [navigation, state.selectedPhotoIndices, media]);
+
+  // const onTickPress = useCallback(() => {
+  //   const selectedPhotos = state.selectedPhotoIndices.map(
+  //     (index) => media[index]
+  //   );
+  //   navigation.navigate("PhotoUploadDetails", { list: selectedPhotos });
+  // }, [navigation, state.selectedPhotoIndices, media]);
+
+  const getItemLayout = useCallback(
+    (data: LocalMediaParams[] | null | undefined, index: number) => {
+      return {
+        index,
+        length: SIZE_16,
+        offset: index * SIZE_16,
+      };
+    },
+    []
+  );
+
   const renderPhotos = useCallback(
     ({ item, index }: ListRenderItemInfo<LocalMediaParams>) => {
-      const selectionIndex = state.selectedPhotoIndices.findIndex(
-        (item) => item === index
+      const selectionIndex = state.selectedPhotos.findIndex(
+        (photo) => photo.uri === item.uri
       );
 
       return (
         <PhotoListItem
           {...item}
-          index={index}
           isMultiSelectable={state.isMultiSelectable}
           selectionIndex={selectionIndex}
           onSelect={onSelect}
+          image={item}
+          styeProp={{
+            paddingTop: StyleSheet.hairlineWidth * 2,
+            paddingBottom: StyleSheet.hairlineWidth * 2,
+            paddingLeft: index % 4 > 0 ? StyleSheet.hairlineWidth * 2 : 0,
+            paddingRight: index % 4 < 3 ? StyleSheet.hairlineWidth * 2 : 0,
+          }}
+          onMultiSelect={onMultiSelect}
         />
       );
     },
-    [state.isMultiSelectable, state.selectedPhotoIndices, onSelect]
+    [state.isMultiSelectable, state.selectedPhotos, onSelect, onMultiSelect]
   );
-
-  useEffect(() => {
-    if (albums.length > 0) {
-      onAlbumSelect(0);
-    }
-  }, [albums, onAlbumSelect]);
-
-  const onAvatarPress = useCallback(() => {
-    const selectedPhotos = state.selectedPhotoIndices.map(
-      (index) => media[index]
-    );
-    navigation.navigate("SelectedLocalPhotoPreview", { list: selectedPhotos });
-  }, [navigation, state.selectedPhotoIndices, media]);
-
-  const onTickPress = useCallback(() => {
-    const selectedPhotos = state.selectedPhotoIndices.map(
-      (index) => media[index]
-    );
-    navigation.navigate("PhotoUploadDetails", { list: selectedPhotos });
-  }, [navigation, state.selectedPhotoIndices, media]);
 
   return (
     <AppContainer stretchToFill={true} selfAlignment="stretch">
       <StatusBar hidden={true} />
       <AppHeader
         leftContainerChild={
-          <AppIcon name="cross" size="medium" foreground="black" />
+          <AppIcon name="cross" size="small" foreground="black" />
         }
         middleContainerChild={
           <AppLabel
@@ -173,6 +193,9 @@ export function PhotoList() {
             foreground="black"
           />
         }
+        rightContainerChild={
+          <AppIcon name="tick" size="small" foreground="black" />
+        }
       />
       <AppContainer
         selfAlignment="stretch"
@@ -181,56 +204,50 @@ export function PhotoList() {
         stretchToFill={true}
       >
         <FlatList
+          data={media}
+          getItemLayout={getItemLayout}
+          renderItem={renderPhotos}
           style={styles.list}
           showsVerticalScrollIndicator={false}
-          data={media}
-          numColumns={3}
-          getItemLayout={getItemLayout}
           keyExtractor={(item) => item.uri}
-          renderItem={renderPhotos}
-          extraData={state}
+          numColumns={4}
         />
-        {state.selectedAlbumIndex > -1 && (
+
+        {!isLoading && !isError && (
           <AppLabel
-            text={albums[state.selectedAlbumIndex]}
+            text={state.selectedAlbum}
             type="solid"
             gap="small"
             corner="small-round"
             background="white"
             foreground="black"
-            styleProp={{ position: "absolute", top: 12 }}
+            styleProp={styles.albumLabel}
           />
         )}
         {media.length > 1 && (
-          <AppIcon
-            name="select"
-            type="solid"
-            background={state.isMultiSelectable ? "#3f71f2" : "white"}
-            foreground={state.isMultiSelectable ? "white" : "black"}
-            size="small"
+          <AppPressable
+            disableLongPress={true}
+            onTap={onMultiSelectToggle}
+            animateOnTouch={true}
             styleProp={styles.selectIcon}
-            onPress={onMultiSelectToggle}
-          />
+          >
+            <AppIcon
+              name="select"
+              type="solid"
+              background={state.isMultiSelectable ? "#3f71f2" : "white"}
+              foreground={state.isMultiSelectable ? "white" : "black"}
+              size="small"
+              onPress={onMultiSelectToggle}
+            />
+          </AppPressable>
         )}
-        {state.selectedPhotoIndices.length > 0 && (
-          <AppIcon
-            name="tick"
-            styleProp={styles.tickIcon}
-            foreground="white"
-            background="#3f71f2"
-            type="solid"
-            size="small"
-            onPress={onTickPress}
-          />
-        )}
-        {state.selectedPhotoIndices.length > 0 && (
+        {!isLoading && !isError && (
           <AppAvatar
             size="small"
             hasRing={true}
             type="active"
-            {...media[state.selectedPhotoIndices[0]]}
+            image={state.selectedPhotos[0]}
             styleProp={styles.avatar}
-            onPress={onAvatarPress}
           />
         )}
       </AppContainer>
@@ -243,18 +260,14 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     flex: 1,
   },
-  tickIcon: {
-    position: "absolute",
-    bottom: SIZE_14,
-  },
   selectIcon: {
     position: "absolute",
-    bottom: SIZE_14,
+    bottom: SIZE_15,
     right: SIZE_6,
   },
   avatar: {
     position: "absolute",
-    bottom: SIZE_14,
-    left: SIZE_6,
+    bottom: SIZE_15,
   },
+  albumLabel: { position: "absolute", top: SIZE_6 },
 });

@@ -1,5 +1,5 @@
 import { Extrapolate, interpolate } from "react-native-reanimated";
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from "./constants";
+import { DAY_IN_MILISECONDS, SCREEN_HEIGHT, SCREEN_WIDTH } from "./constants";
 import { RNFFmpeg, RNFFprobe } from "react-native-ffmpeg";
 import * as FileSystem from "expo-file-system";
 import {
@@ -7,7 +7,6 @@ import {
   MediaOptions,
   MediaParams,
   Property,
-  TransitionConfig,
   TransitionParams,
   TransitionProperty,
 } from "./types";
@@ -116,47 +115,47 @@ export function evaluatePropertyValue(
   }
 }
 
-export async function downloadMedia(
-  texture: MediaParams
-): Promise<MediaOptions> {
-  const outputDir =
-    FileSystem.cacheDirectory +
-    "texture-" +
-    texture.name +
-    "-" +
-    Date.now() +
-    "/";
+// export async function downloadMedia(
+//   texture: MediaParams
+// ): Promise<MediaOptions> {
+//   const outputDir =
+//     FileSystem.cacheDirectory +
+//     "texture-" +
+//     texture.name +
+//     "-" +
+//     Date.now() +
+//     "/";
 
-  const outputFile =
-    texture.mediaType === "video" ? `frame-%d.png` : "frame.png";
+//   const outputFile =
+//     texture.mediaType === "video" ? `frame-%d.png` : "frame.png";
 
-  const info = await RNFFprobe.getMediaInformation(texture.uri);
-  const videoStream = (info.getAllProperties()["streams"] as any)[0];
-  const noOfFrames = Math.floor(parseInt(videoStream["nb_frames"]));
-  const duration = Math.floor(parseInt(videoStream["duration"]) * 1000);
-  const width = Math.floor(parseInt(videoStream["width"]));
-  const height = Math.floor(parseInt(videoStream["height"]));
+//   const info = await RNFFprobe.getMediaInformation(texture.uri);
+//   const videoStream = (info.getAllProperties()["streams"] as any)[0];
+//   const noOfFrames = Math.floor(parseInt(videoStream["nb_frames"]));
+//   const duration = Math.floor(parseInt(videoStream["duration"]) * 1000);
+//   const width = Math.floor(parseInt(videoStream["width"]));
+//   const height = Math.floor(parseInt(videoStream["height"]));
 
-  await FileSystem.makeDirectoryAsync(outputDir, { intermediates: true });
-  const result = await RNFFmpeg.executeWithArguments([
-    "-i",
-    texture.uri,
-    outputDir + outputFile,
-  ]);
-  if (result !== 0) {
-    throw new Error("error");
-  }
-  return {
-    duration: isNaN(duration) ? 0 : duration,
-    frame: isNaN(noOfFrames) ? 0 : noOfFrames,
-    height,
-    localUri:
-      texture.mediaType === "video" ? outputDir : outputDir + outputFile,
-    width,
-    name: texture.name,
-    type: texture.mediaType,
-  };
-}
+//   await FileSystem.makeDirectoryAsync(outputDir, { intermediates: true });
+//   const result = await RNFFmpeg.executeWithArguments([
+//     "-i",
+//     texture.uri,
+//     outputDir + outputFile,
+//   ]);
+//   if (result !== 0) {
+//     throw new Error("error");
+//   }
+//   return {
+//     duration: isNaN(duration) ? 0 : duration,
+//     frame: isNaN(noOfFrames) ? 0 : noOfFrames,
+//     height,
+//     localUri:
+//       texture.mediaType === "video" ? outputDir : outputDir + outputFile,
+//     width,
+//     name: texture.name,
+//     type: texture.mediaType,
+//   };
+// }
 
 export function fromPropertyToNumberOrTransitionProperty(
   value: Property
@@ -182,4 +181,62 @@ export function fromPropertyToNumberOrTransitionProperty(
     typeRange,
     repeat: value.repeat,
   };
+}
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "Aug",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+export function getDate(timestamp: number) {
+  const currentDate = new Date();
+  const targetDate = new Date(timestamp);
+
+  if (
+    currentDate.getDate() === targetDate.getDate() &&
+    currentDate.getTime() - timestamp < DAY_IN_MILISECONDS
+  ) {
+    return "Today";
+  } else if (
+    currentDate.getDate() === targetDate.getDate() + 1 &&
+    currentDate.getTime() - timestamp < 2 * DAY_IN_MILISECONDS
+  ) {
+    return "Yestarday";
+  } else {
+    return (
+      `${MONTHS[targetDate.getMonth()]} ${targetDate.getDate() + 1}` +
+      (targetDate.getFullYear() < currentDate.getFullYear()
+        ? " " + targetDate.getFullYear()
+        : "")
+    );
+  }
+}
+
+export function generateTimestampString(timestamp: number) {
+  const miliseconds = timestamp % 1000;
+  const totalSeconds = Math.floor(timestamp / 1000);
+  const seconds = totalSeconds % 60;
+  const totalMins = Math.floor(totalSeconds / 60);
+  const mins = totalMins % 60;
+  const hours = Math.floor(totalMins / 60);
+
+  return `${hours > 9 ? "" + hours : "0" + hours}:${
+    mins > 9 ? "" + mins : "0" + mins
+  }:${seconds > 9 ? "" + seconds : "0" + seconds}:${
+    miliseconds > 99
+      ? "" + miliseconds
+      : miliseconds > 9
+      ? "0" + miliseconds
+      : "00" + miliseconds
+  }`;
 }

@@ -1,69 +1,69 @@
-import { useMemo } from "react";
 import { Image, StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { SIZE_1, SIZE_10, SIZE_11, SIZE_12 } from "../../constants/constants";
+import {
+  SIZE_1,
+  SIZE_10,
+  SIZE_11,
+  SIZE_12,
+  SIZE_17,
+  SIZE_20,
+  SIZE_21,
+  SIZE_22,
+} from "../../constants/constants";
+import { ImageParams } from "../../constants/types";
 import { AppContainer } from "./AppContainer";
 
 export type AppAvatarProps = {
-  uri: string;
-  size?: "small" | "medium" | "large" | "extra-large";
-  width: number;
-  height: number;
+  size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
   hasRing?: boolean;
   type?: "animated" | "inactive" | "active";
-  bounce?: boolean;
-  onPress?: () => void;
   styleProp?: StyleProp<ViewStyle>;
+  image: ImageParams;
 };
 
 export function AppAvatar({
   size,
-  uri,
-  height,
-  width,
+  image,
   hasRing,
   type,
-  bounce,
-  onPress,
   styleProp,
 }: AppAvatarProps) {
   type = type ? type : "active";
   size = size ? size : "small";
 
-  const { avatarSize, ringSize } = useMemo(() => {
-    let avatarSize = 0;
-    let ringSize = 0;
+  let avatarSize = 0;
+  let ringSize = 0;
 
-    switch (size) {
-      case "small":
-        avatarSize = SIZE_10 * 3;
-        ringSize = 3 * StyleSheet.hairlineWidth;
-        break;
+  switch (size) {
+    case "extra-small":
+      avatarSize = SIZE_22;
+      ringSize = 2 * StyleSheet.hairlineWidth;
+      break;
 
-      case "medium":
-        avatarSize = SIZE_11 * 2.8;
-        ringSize = 4 * StyleSheet.hairlineWidth;
-        break;
+    case "small":
+      avatarSize = SIZE_21;
+      ringSize = 3 * StyleSheet.hairlineWidth;
+      break;
 
-      case "large":
-        avatarSize = SIZE_12 * 2.2;
-        ringSize = 5 * StyleSheet.hairlineWidth;
-        break;
+    case "medium":
+      avatarSize = SIZE_20;
+      ringSize = 4 * StyleSheet.hairlineWidth;
+      break;
 
-      case "extra-large":
-        avatarSize = SIZE_1;
-        ringSize = 6 * StyleSheet.hairlineWidth;
-        break;
-    }
+    case "large":
+      avatarSize = SIZE_17;
+      ringSize = 5 * StyleSheet.hairlineWidth;
+      break;
 
-    return { avatarSize, ringSize };
-  }, [size]);
+    case "extra-large":
+      avatarSize = SIZE_1;
+      ringSize = 6 * StyleSheet.hairlineWidth;
+      break;
+  }
 
   return (
     <AppContainer
       styleProp={styleProp}
-      isAnimated={bounce}
-      onPress={onPress}
       width={avatarSize}
       height={avatarSize}
       minorAxisAlignment="center"
@@ -71,20 +71,21 @@ export function AppAvatar({
       borderRadius={avatarSize / 2}
     >
       <Image
-        source={{ uri, width, height }}
+        source={{ ...image }}
         resizeMode="cover"
         style={{
           width: avatarSize - 4 * ringSize,
           height: avatarSize - 4 * ringSize,
           borderRadius: (avatarSize - 4 * ringSize) / 2,
-          backgroundColor: "grey",
+          backgroundColor: "#e1e1e1",
         }}
+        fadeDuration={0}
       />
       {hasRing && (
         <Svg
           width={avatarSize}
           height={avatarSize}
-          style={[styles.svg, { borderRadius: avatarSize / 2 }]}
+          style={{ borderRadius: avatarSize / 2, position: "absolute" }}
         >
           <Circle
             cx={avatarSize / 2}
@@ -100,9 +101,3 @@ export function AppAvatar({
     </AppContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  svg: {
-    position: "absolute",
-  },
-});
