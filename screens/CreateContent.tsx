@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { Image, StatusBar } from "react-native";
-import { SelectPhoto } from "../components/create-content/SelectPhoto";
+import { useCallback, useState } from "react";
+import { StatusBar } from "react-native";
+import { SelectPhoto } from "../components/create-content/create-image-post/SelectPhoto";
 import { SwitchContentTypeModal } from "../components/create-content/SwitchContentTypeModal";
 import { AppContainer } from "../components/utility/AppContainer";
 import { AppLabel } from "../components/utility/AppLabel";
 import { AppPressable } from "../components/utility/AppPressable";
 import { ContentType } from "../constants/types";
-import { useLocalMedia } from "../hooks/useLocalMedia";
-import { useVideoProcessor } from "../hooks/useVideoProcessor";
 
 export function CreateContent() {
   const [contentType, setContentType] = useState<ContentType>("PHOTO");
@@ -28,7 +26,7 @@ export function CreateContent() {
       <StatusBar hidden={true} />
       <SelectPhoto />
       <AppPressable
-        styleProp={{ position: "absolute", bottom: 16, opacity: 0.8 }}
+        styleProp={{ position: "absolute", bottom: 16 }}
         disableLongPress={true}
         onTap={() => {
           setContentSwitchModal((prevState) => !prevState);
@@ -39,6 +37,10 @@ export function CreateContent() {
           foreground="white"
           size="medium"
           style="regular"
+          type="solid"
+          background="rgba(0, 0, 0, 0.7)"
+          gap="small"
+          corner="small-round"
         />
       </AppPressable>
 

@@ -3,16 +3,6 @@ import { Dimensions } from "react-native";
 export const SCREEN_WIDTH = Dimensions.get("screen").width;
 export const SCREEN_HEIGHT = Dimensions.get("screen").height;
 
-export const AVATAR_SMALL_SIZE = Math.round(SCREEN_WIDTH / 20);
-export const AVATAR_NORMAL_SIZE = Math.round(SCREEN_WIDTH / 9);
-export const AVATAR_MEDIUM_SIZE = Math.round(SCREEN_WIDTH / 5);
-export const AVATAR_LARGE_SIZE = Math.round(SCREEN_WIDTH / 3);
-
-export const TEXT_SMALL_SIZE = Math.round(SCREEN_WIDTH / 27);
-export const TEXT_MEDIUM_SIZE = Math.round(SCREEN_WIDTH / 23);
-export const TEXT_LARGE_SIZE = Math.round(SCREEN_WIDTH / 20);
-export const TEXT_EXTRA_LARGE_SIZE = Math.round(SCREEN_WIDTH / 15);
-
 export const SIZE_1 = Math.round(SCREEN_WIDTH / 3); //120px for 360
 
 export const SIZE_2 = Math.round(SCREEN_WIDTH * 0.4); //144px for 360
@@ -55,6 +45,65 @@ export const SIZE_20 = Math.round(SCREEN_WIDTH / 6); //60px for 360px
 
 export const SIZE_21 = Math.round(SCREEN_WIDTH / 7.5); //48px for 360px
 
-export const SIZE_22 = Math.round(SCREEN_WIDTH / 13); //27px for 360px
+export const SIZE_22 = Math.round(SCREEN_WIDTH / 13.5); //27px for 360px
+
+export const SIZE_23 = Math.round(SCREEN_WIDTH / 18); //20px for 360px
+
+export const SIZE_24 = Math.round(SCREEN_WIDTH / 21); //17px for 360px
+
+export const SIZE_25 = Math.round(SCREEN_WIDTH / 25); //14px for 360px
+
+export const SIZE_26 = Math.round(SCREEN_WIDTH / 90); //4px for 360px
+
+export const SIZE_27 = Math.round(SCREEN_WIDTH / 8.5); //42px for 360px
+
+export const SIZE_28 = Math.round(SCREEN_WIDTH / 1.44); //250px for 360px
+
+export const SIZE_29 = Math.round(SCREEN_WIDTH / 2); //180px for 360px
+
+export const SIZE_30 = Math.round(SCREEN_WIDTH * 0.75); //270px for 360px
+
+export const SIZE_31 = Math.round(SCREEN_WIDTH / 2.4); //150px for 360px
+
+export const SIZE_32 = Math.round(SCREEN_WIDTH / 1.2); //300px for 360px
 
 export const DAY_IN_MILISECONDS = 3600 * 1000;
+
+export const COLOR_1 = "#3f71f2";
+export const COLOR_2 = "#ff4ed8";
+export const COLOR_3 = "#bc4eff";
+export const COLOR_4 = "#4eff5f";
+export const COLOR_5 = "#e1e1e1";
+export const COLOR_6 = "#909090";
+export const COLOR_7 = "black";
+export const COLOR_8 = "white";
+export const COLOR_9 = "#1f1f1f";
+export const COLOR_10 = "red";
+export const COLOR_11 = "rgba(0, 0, 0, 0.5)";
+
+export const IMAGE_POST_CONTENT_HEIGHT = Math.round(SCREEN_WIDTH * 1.25);
+export const SHORTS_POST_CONTENT_HEIGHT = Math.round(SCREEN_WIDTH * 1.4);
+export const VIDEO_POST_CONTENT_HEIGHT = SCREEN_WIDTH;
+
+export const NETWORK_ERROR_CODE = 1000;
+export const MEMORY_CLEAN_UP_ERROR_CODE = 2000;
+export const MEDIA_PLAYBACK_ERROR_CODE = 3000;
+
+export const SHUTTER_HEADER_HEIGHT = SIZE_21;
+export const SHUTTER_TOTAL_HEIGHT = SIZE_32;
+export const SHUTTER_BODY_HEIGHT = SHUTTER_TOTAL_HEIGHT - SHUTTER_HEADER_HEIGHT;
+export const SHUTTER_DRAG_ANIMATION_DURATION_MS = 200;
+
+export const HEADER_HEIGHT = SIZE_20;
+export const LOGO_SIZE = SIZE_21;
+
+export const POSTER_BLUR_RADIUS = 10;
+
+export const POSTER_FADE_DURATION_MS = 800;
+
+export const DOUBLE_TAP_POPUP_ANIMATION_VALUE_START = 0.5;
+export const DOUBLE_TAP_POPUP_ANIMATION_VELOCITY = 5;
+export const DOUBLE_TAP_POPUP_ANIMATION_DELAY = 800;
+export const DOUBLE_TAP_POPUP_ANIMATION_END_DURATION = 200;
+
+export const IMAGE_ZOOM_RESET_DURATION_MS = 100;

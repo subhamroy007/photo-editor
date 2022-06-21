@@ -1,59 +1,88 @@
-import { useLayout } from "@react-native-community/hooks";
 import { ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  SCREEN_WIDTH,
-  SIZE_4,
+  COLOR_7,
+  COLOR_8,
+  HEADER_HEIGHT,
   SIZE_5,
-  SIZE_6,
 } from "../../constants/constants";
-import { AppContainer } from "./AppContainer";
+import { globalStyles } from "../../constants/style";
+import { AppLabel } from "./AppLabel";
 
 export type AppHeader = {
-  leftContainerChild?: ReactNode;
-  rightContainerChild?: ReactNode;
-  middleContainerChild?: ReactNode;
-  float?: boolean;
+  transparent?: boolean;
+  style?: StyleProp<ViewStyle>;
+  headerLeft?: ReactNode;
+  headerRight?: ReactNode;
+  title?: string;
 };
 
 export function AppHeader({
-  leftContainerChild,
-  middleContainerChild,
-  rightContainerChild,
-  float,
+  transparent,
+  style,
+  headerLeft,
+  headerRight,
+  title,
 }: AppHeader) {
   return (
-    <AppContainer
-      contentOrientation="row"
-      minorAxisAlignment="center"
-      majorAxisAlignment={
-        rightContainerChild && !leftContainerChild && !middleContainerChild
-          ? "end"
-          : "start"
-      }
-      selfAlignment="stretch"
-      styleProp={{ zIndex: 100, position: float ? "absolute" : "relative" }}
-      paddingLeft={SIZE_5}
-      paddingRight={SIZE_5}
-      paddingBottom={SIZE_6}
-      paddingTop={SIZE_6}
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={[globalStyles.absolutePosition, styles.headerContainer, style]}
     >
-      {leftContainerChild && <AppContainer>{leftContainerChild}</AppContainer>}
-      {middleContainerChild && (
-        <AppContainer
-          majorAxisAlignment={"center"}
-          stretchToFill={true}
-          styleProp={{
-            marginLeft: leftContainerChild ? SIZE_5 : 0,
-            marginRight: rightContainerChild ? SIZE_5 : 0,
-          }}
-        >
-          {middleContainerChild}
-        </AppContainer>
-      )}
-      {rightContainerChild && (
-        <AppContainer>{rightContainerChild}</AppContainer>
-      )}
-    </AppContainer>
+      <View
+        style={[
+          globalStyles.flexRow,
+          globalStyles.alignCenter,
+          globalStyles.justifyCenter,
+          styles.header,
+          {
+            backgroundColor: transparent === true ? "transparent" : COLOR_8,
+          },
+        ]}
+      >
+        {headerLeft && (
+          <View style={[globalStyles.absolutePosition, styles.headerLeft]}>
+            {headerLeft}
+          </View>
+        )}
+        {title && (
+          <AppLabel
+            size="large"
+            style="bold"
+            text={title}
+            foreground={transparent === true ? COLOR_8 : COLOR_7}
+            styleProp={styles.title}
+          />
+        )}
+        {headerRight && (
+          <View style={[globalStyles.absolutePosition, styles.headerRight]}>
+            {headerRight}
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    left: 0,
+    right: 0,
+    top: 0,
+    width: "100%",
+  },
+  header: {
+    alignSelf: "stretch",
+    height: HEADER_HEIGHT,
+  },
+  headerLeft: {
+    left: SIZE_5,
+  },
+  headerRight: {
+    right: SIZE_5,
+  },
+  title: {
+    maxWidth: "64%",
+  },
+});

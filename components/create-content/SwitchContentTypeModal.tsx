@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
-import { SIZE_15, SIZE_18, SIZE_4, SIZE_5 } from "../../constants/constants";
+import { SIZE_18, SIZE_20, SIZE_4, SIZE_5 } from "../../constants/constants";
 import { ContentType } from "../../constants/types";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
@@ -78,9 +78,9 @@ export function SwitchContentTypeModal({
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: SIZE_15,
+    bottom: SIZE_20,
     borderRadius: SIZE_4,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   item: {
     padding: SIZE_5,

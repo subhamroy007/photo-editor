@@ -1,7 +1,10 @@
+import { NavigatorScreenParams } from "@react-navigation/native";
 import { vec3 } from "gl-matrix";
 import { ReactNode } from "react";
-import { StyleProp, ViewStyle } from "react-native";
+import { StyleProp, TextStyle, ViewStyle } from "react-native";
 import { ResizeMode } from "react-native-fast-image";
+import { ComposedGesture } from "react-native-gesture-handler";
+import { Gesture } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gesture";
 import { SharedValue } from "react-native-reanimated";
 import { SceneRendererProps } from "react-native-tab-view";
 import {
@@ -50,54 +53,152 @@ export interface PhotoFetchResult {
 }
 
 export type IconName =
-  | "post"
-  | "focus"
-  | "recorder"
+  | "chevron-left"
+  | "chevron-right"
+  | "chevron-up"
+  | "clarity"
+  | "close"
+  | "comment-outline"
+  | "comment-solid"
+  | "contrast"
+  | "create"
+  | "dehaze"
+  | "doodle"
+  | "download"
+  | "edge-brush"
+  | "edit-outline"
+  | "edit-solid"
+  | "equalizer"
+  | "eraser"
+  | "expand"
+  | "exposure"
+  | "extra-thin-brush"
+  | "favourite"
+  | "fill"
+  | "filter"
+  | "flash-off"
+  | "flash-on"
+  | "folder"
+  | "follow"
+  | "following"
+  | "font"
+  | "gif"
+  | "glamour"
+  | "grain"
   | "grid"
-  | "landscape"
-  | "retry"
-  | "rotate"
+  | "group-outline"
+  | "group-solid"
+  | "hashtag"
+  | "heart-outline"
+  | "heart-solid"
+  | "help"
+  | "hide"
+  | "highlight"
+  | "history"
+  | "home-outline"
+  | "home-solid"
+  | "hue"
+  | "info"
+  | "layout"
   | "layout-1"
   | "layout-2"
-  | "search"
-  | "select"
   | "layout-3"
-  | "shorts"
-  | "layout-4"
-  | "layout-5"
-  | "star"
-  | "stop"
-  | "left-arrow"
-  | "microphone"
-  | "story"
-  | "text"
+  | "live"
+  | "location"
+  | "lock"
   | "maximize"
+  | "mention"
+  | "message-outline"
+  | "message-solid"
+  | "mic-off"
+  | "mic-on"
   | "minimize"
-  | "tick"
-  | "timer"
+  | "moon"
+  | "more"
+  | "multicapture"
+  | "multiselect"
   | "music"
-  | "no-flash"
-  | "upload"
-  | "video"
+  | "mute"
+  | "next"
+  | "notification-outline"
+  | "notification-solid"
+  | "paperclip"
   | "pause"
+  | "phone-outline"
+  | "phone-solid"
+  | "pin-outline"
+  | "pin-solid"
   | "play"
-  | "create"
-  | "align"
+  | "previous"
+  | "report"
+  | "saturation"
+  | "search-bold"
+  | "search-regular"
+  | "send"
+  | "security"
+  | "settings-outline"
+  | "settings-solid"
+  | "share-outline"
+  | "share-solid"
+  | "sharp"
+  | "shinny"
+  | "shorts"
+  | "show"
+  | "smiley"
+  | "spinner"
+  | "sticker"
+  | "sun"
+  | "tag-regular"
+  | "temperature"
+  | "tag-bold"
+  | "thin-brush"
+  | "tick"
+  | "timer-15"
+  | "timer-30"
+  | "timer-60"
+  | "tint"
+  | "tone"
+  | "trash"
+  | "trending-outline"
+  | "trending-solid"
+  | "undo"
+  | "user-outline"
+  | "user-solid"
+  | "vibrance"
+  | "video-outline"
+  | "video-recorder-outline"
+  | "video-recorder-solid"
+  | "video-solid"
+  | "vignette"
+  | "volume-high"
+  | "volume-low"
+  | "volume-medium"
+  | "white"
+  | "about"
+  | "added-to-playlist"
+  | "add-song"
+  | "add-to-playlist"
+  | "around-the-clock"
+  | "arrow-down"
+  | "arrow-left"
+  | "arrow-right"
+  | "arrow-up"
   | "bookmark-outline"
   | "bookmark-solid"
-  | "camera"
-  | "cross"
-  | "down-indicator"
-  | "download"
-  | "effect"
-  | "flash";
+  | "boomerang"
+  | "camera-flip"
+  | "camera-outline"
+  | "camera-solid"
+  | "caption-outline"
+  | "caption-solid"
+  | "chevron-down";
 
 export interface EffectParams {
   metadata: {
     target: "camera" | "media";
     activeOnRecord: boolean;
   };
-  medias: MediaParams[];
+  // medias: MediaParams[];
   textures: TextureParams[];
   materials: MaterialParams[];
   frames: FrameParams[];
@@ -224,34 +325,32 @@ export type ImageContainerConfig = {
   resizeMode: "cover" | "contain" | "center";
 } & Resolution;
 
-export type MediaParams = {
-  uri: string;
-  duration: number | null;
-} & Resolution;
-
 export type AppLabelProps = {
   text: string;
-  size?: "small" | "medium" | "large" | "extra-large";
+  size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
   style?: "medium" | "bold" | "regular";
   gap?: "small" | "large";
   corner?: "small-round" | "large-round";
-  type?: "solid" | "outline";
-  selfAlignment?: "stretch" | "center" | "start" | "end";
-  borderSize?: "small" | "large";
   background?: string;
   foreground?: string;
-  styleProp?: StyleProp<ViewStyle>;
+  styleProp?: StyleProp<TextStyle>;
   hasUnderline?: boolean;
+  isBackgroundVisible?: boolean;
+  isBorderVisible?: boolean;
+  noOfLines?: number;
+  onPress?: () => void;
 };
 
 export type AppIconProps = {
   name: IconName;
   size?: "small" | "medium" | "large" | "extra-small" | "extra-large";
-  type?: "outline" | "solid";
-  borderSize?: "small" | "large";
+  gap?: "small" | "large" | "none";
   background?: string;
   foreground?: string;
-  styleProp?: StyleProp<ViewStyle>;
+  styleProp?: StyleProp<TextStyle>;
+  isBackgroundVisible?: boolean;
+  isBorderVisible?: boolean;
+  onPress?: () => void;
 };
 
 export type AppPressableProps = {
@@ -301,24 +400,8 @@ export type AppContainerProps = {
     | "between"
     | "around"
     | "stretch";
-} & AppPressableProps;
-
-export type LocationShortResponse = {
-  id: string;
-  name: string;
-  title: string;
-};
-
-export type AccountShortResponse = {
-  id: string;
-  userId: string;
-  username: string;
-  profilePicture: {
-    uri: string;
-    width: number;
-    height: number;
-  };
-  hasUnseenStory: boolean;
+  styleProp?: StyleProp<ViewStyle>;
+  children?: ReactNode;
 };
 
 export type ImageParams = {
@@ -327,12 +410,16 @@ export type ImageParams = {
   height: number;
 };
 
-export type LocalMediaParams = {
-  duration: number | null;
-  time: string;
-  album: string;
-  thumbnailUri: string | null;
+export type VideoParams = {
+  duration: number;
+  thumbnail: ImageParams;
+  preview: { duration: number } & ImageParams;
 } & ImageParams;
+
+export type LocalMediaParams = {
+  timestamp: number;
+  album: string;
+} & VideoParams;
 
 export type LocalMediaHookState = {
   albums: string[];
@@ -341,4 +428,242 @@ export type LocalMediaHookState = {
   isError: boolean;
   hasReadPermission: boolean;
   hasWritePermission: boolean;
+};
+
+export type AccountShortResponse = {
+  id: string;
+  userId: string;
+  username: string;
+  isFollower: boolean;
+  isFollowing: boolean;
+  hasUnseenStory: boolean;
+  profilePictureUri: string;
+};
+
+export type LocationShortResponse = {
+  id: string;
+  name: string;
+  title: string;
+};
+
+export type CommentResponse = {
+  id: string;
+  content: string;
+  author: AccountShortResponse;
+  timestamp: number;
+  hasLiked: boolean;
+  noOkLikes: number;
+  noOfReplies: number;
+};
+
+export type AudioShortResponse = {
+  id: string;
+  title: string;
+  artist: string;
+  startFrom: number;
+  isAvailable: boolean;
+  isSaved: boolean;
+  uri: string;
+  poster: string;
+  duration: number;
+};
+
+export type EffectShortResponse = {
+  id: string;
+  poster: string;
+  title: string;
+  isSaved: boolean;
+};
+
+export type PostResponse = {
+  type: "photo" | "video" | "shorts";
+  id: string;
+  author: AccountShortResponse;
+  media: MediaParams[];
+  audio: AudioShortResponse | null;
+  poster: string;
+  duration: number;
+  caption: string;
+  title: string;
+  taggedLocation: LocationShortResponse | null;
+  taggedAccounts: AccountShortResponse[];
+  effect: EffectShortResponse | null;
+  timestamp: number;
+  isSaved: boolean;
+  isLiked: boolean;
+  isWatched: boolean;
+  noOfLikes: number;
+  noOfViews: number;
+  noOfComments: number;
+  topComments: CommentResponse[];
+  topLikes: AccountShortResponse[];
+};
+
+export type MediaParams = {
+  uri: string;
+  width: number;
+  height: number;
+};
+
+export type AppErrorParams = {
+  code: number;
+  message: string;
+  reasons: {
+    [key: string]: string;
+  };
+};
+
+export type FeedPostProps = {
+  post: PostResponse;
+  onFollowButtonPress: (index: number) => void;
+  onMoreIconPress: (index: number) => void;
+  onLikePress: (index: number, value?: boolean) => void;
+  onCommentPress: (index: number) => void;
+  onAuthorIdPress: (index: number) => void;
+  onAuthorAvatarPress: (index: number) => void;
+  onSharePress: (index: number) => void;
+  onBookmarkPress: (index: number) => void;
+  onLocationPress: (index: number) => void;
+  onTagIconPress: (index: number) => void;
+  onMusicButtonPress: (index: number) => void;
+  onEffectButtonPress: (index: number) => void;
+  onLikeCountPress: (index: number) => void;
+  onHashtagPress: (hashtag: string) => void;
+  onAccountPress: (userId: string) => void;
+  notify: (notification: string) => void;
+  showFollowButton: boolean;
+  isVisible: boolean;
+  index: number;
+  width: number;
+  isStoryLoading: boolean;
+};
+
+export type FeedVideoPostProps = {
+  isMuted: boolean;
+  toggleMuteState: () => void;
+} & FeedPostProps;
+
+export type FeedShortsPostProps = {
+  isMuted: boolean;
+  toggleMuteState: () => void;
+} & FeedPostProps;
+
+export type FeedPostTemplateProps = {
+  height: number;
+  children: ReactNode;
+  loadAsync: () => Promise<void>;
+  onLoad: () => void;
+} & FeedPostProps;
+
+export type FullScreenPostProps = {
+  height: number;
+  toggleFullScreen: (orientation: "landscape" | "portrait") => void;
+  isFullScreen: boolean;
+} & FeedPostProps;
+
+export type FullScreenImagePostProps = {
+  initialIndex: number;
+} & FullScreenPostProps;
+
+export type FullScreenShortsPostProps = {
+  startFrom: number;
+  isMuted: boolean;
+  toggleMuteState: () => void;
+} & FullScreenPostProps;
+
+export type FullScreenVideoPostProps = {
+  startFrom: number;
+  isMuted: boolean;
+
+  toggleMuteState: () => void;
+} & FullScreenPostProps;
+
+export type FullScreenPostTemplateProps = {
+  hideDetails: boolean;
+  externalGesture: ComposedGesture;
+  loadMedia: () => Promise<void>;
+  onLoad: () => void;
+  height: number;
+  children: ReactNode;
+  isReady: boolean;
+  topNode: ReactNode;
+} & FullScreenPostProps;
+
+export type MediaLoadingIndicatorProps = {
+  loadMedia: () => Promise<void>;
+  onLoad: () => void;
+  onError: (error: AppErrorParams) => void;
+  posterUri: string;
+};
+
+export type AppGestureComponentProps = {
+  disabled?: boolean;
+  onTap: () => void;
+  onDoubleTap: () => void;
+  onLongPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+};
+
+export type MediaRenderingComponentProps = {
+  poster: string;
+  loadAsync: () => Promise<void>;
+  onLoad: () => void;
+  onError: () => void;
+  type: "post" | "account";
+  width: number;
+  height: number;
+} & AppGestureComponentProps;
+
+export type AppImageProps = {
+  media: MediaParams;
+  width: number;
+  height: number;
+  style?: StyleProp<ViewStyle>;
+  disableZoom?: boolean;
+  onPinchStart?: (scale: number) => void;
+  onPinchEnd?: (scale: number) => void;
+  scrollStart?: number;
+  scrollEnd?: number;
+  offset?: SharedValue<number>;
+};
+
+export type AppImageListProps = {
+  media: MediaParams[];
+  width: number;
+  height: number;
+  onIndexChange?: (index: number) => void;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+  initialIndex?: number;
+  disableZoom?: boolean;
+  onPinchStart?: (scale: number) => void;
+  onPinchEnd?: (scale: number) => void;
+};
+
+//navigator param types
+export type UtilityStackNavigatorParams = {
+  Profile: {
+    userId: string;
+  };
+};
+
+export type RootBottomTabNavigatorParams = {
+  UtilityStacks: NavigatorScreenParams<UtilityStackNavigatorParams>;
+  HomeFeed: undefined;
+  VideoFeed: undefined;
+  ShortsFeed: undefined;
+  Notification: undefined;
+  Account: undefined;
+};
+
+export type RootMaterialTopTabNavigatorParams = {
+  BottomTabs: NavigatorScreenParams<RootBottomTabNavigatorParams>;
+  CreateContent: undefined;
+  Chat: undefined;
+};
+
+export type RootStackNavigatorParams = {
+  MaterialTopTabs: NavigatorScreenParams<RootMaterialTopTabNavigatorParams>;
+  TempScreen: undefined;
 };

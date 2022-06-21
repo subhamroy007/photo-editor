@@ -1,12 +1,16 @@
 import { StyleSheet, Text } from "react-native";
 import {
-  TEXT_EXTRA_LARGE_SIZE,
-  TEXT_LARGE_SIZE,
-  TEXT_MEDIUM_SIZE,
-  TEXT_SMALL_SIZE,
+  COLOR_1,
+  COLOR_8,
+  SIZE_10,
+  SIZE_14,
+  SIZE_23,
+  SIZE_25,
+  SIZE_4,
+  SIZE_5,
+  SIZE_6,
 } from "../../constants/constants";
 import { AppLabelProps } from "../../constants/types";
-import { AppContainer } from "./AppContainer";
 
 export function AppLabel({
   text,
@@ -14,60 +18,61 @@ export function AppLabel({
   style,
   gap,
   corner,
-  type,
-  selfAlignment,
   background,
   foreground,
   styleProp,
-  borderSize,
   hasUnderline,
+  isBackgroundVisible,
+  isBorderVisible,
+  noOfLines,
+  onPress,
 }: AppLabelProps) {
-  size = size ? size : "medium";
-  style = style ? style : "medium";
-  foreground = foreground ? foreground : "white";
-  background = background ? background : "#3f71f2";
-
   let fontSize = 0;
   let fontFamily = "";
   let padding = 0;
   let borderRadius = 0;
   let backgroundColor = "";
   let borderColor = "";
-  let borderWidth = 0;
+  let foregroundColor = foreground ? foreground : COLOR_8;
 
   switch (size) {
-    case "small":
-      fontSize = TEXT_SMALL_SIZE;
-      break;
     case "medium":
-      fontSize = TEXT_MEDIUM_SIZE;
+      fontSize = SIZE_10;
       break;
     case "large":
-      fontSize = TEXT_LARGE_SIZE;
+      fontSize = SIZE_23;
       break;
     case "extra-large":
-      fontSize = TEXT_EXTRA_LARGE_SIZE;
+      fontSize = SIZE_14;
+      break;
+    case "extra-small":
+      fontSize = SIZE_5;
+      break;
+    case "small":
+    default:
+      fontSize = SIZE_25;
       break;
   }
 
   switch (style) {
-    case "medium":
-      fontFamily = "roboto-medium";
-      break;
     case "bold":
       fontFamily = "roboto-bold";
       break;
     case "regular":
       fontFamily = "roboto-regular";
       break;
+    case "medium":
+    default:
+      fontFamily = "roboto-medium";
+      break;
   }
 
   switch (gap) {
     case "small":
-      padding = 6;
+      padding = SIZE_4;
       break;
     case "large":
-      padding = 12;
+      padding = SIZE_5;
       break;
     default:
       padding = 0;
@@ -75,69 +80,53 @@ export function AppLabel({
 
   switch (corner) {
     case "small-round":
-      borderRadius = 6;
+      borderRadius = SIZE_4;
       break;
     case "large-round":
-      borderRadius = 18;
+      borderRadius = SIZE_6;
       break;
     default:
       borderRadius = 0;
   }
 
-  switch (type) {
-    case "solid":
-      backgroundColor = background!;
-      borderColor = "transparent";
-      break;
-    case "outline":
-      backgroundColor = "transparent";
-      borderColor = foreground!;
-      break;
-    default:
-      backgroundColor = "transparent";
-      borderColor = "transparent";
+  if (isBackgroundVisible) {
+    backgroundColor = background ? background : COLOR_1;
+  } else {
+    backgroundColor = "transparent";
   }
 
-  switch (borderSize) {
-    case "small":
-      borderWidth = 2 * StyleSheet.hairlineWidth;
-      break;
-    case "large":
-      borderWidth = 4 * StyleSheet.hairlineWidth;
-      break;
-    default:
-      borderWidth = 0;
+  if (isBorderVisible) {
+    borderColor = foreground ? foreground : COLOR_8;
+  } else {
+    borderColor = "transparent";
   }
 
   return (
-    <AppContainer
-      paddingTop={padding}
-      paddingBottom={padding}
-      paddingLeft={padding}
-      paddingRight={padding}
-      borderRadius={borderRadius}
-      borderColor={borderColor}
-      backgroundColor={backgroundColor}
-      styleProp={styleProp}
-      selfAlignment={selfAlignment}
-      borderWidth={borderWidth}
+    <Text
+      onPress={onPress}
+      style={[
+        {
+          fontFamily,
+          fontSize,
+          lineHeight:
+            noOfLines && noOfLines > 1 ? Math.round(fontSize * 1.2) : fontSize,
+          textDecorationLine: hasUnderline ? "underline" : "none",
+          borderWidth: 2 * StyleSheet.hairlineWidth,
+          backgroundColor,
+          color: foregroundColor,
+          borderColor,
+          paddingVertical: padding,
+          paddingHorizontal: padding * 2,
+          borderRadius: borderRadius,
+          textAlignVertical: noOfLines && noOfLines > 1 ? "top" : "center",
+          textAlign: noOfLines && noOfLines > 1 ? "left" : "center",
+        },
+        styleProp,
+      ]}
+      numberOfLines={noOfLines ? noOfLines : 1}
+      ellipsizeMode="tail"
     >
-      <Text
-        style={[
-          {
-            fontFamily,
-            fontSize,
-            lineHeight: fontSize,
-            color: foreground,
-            alignSelf: "center",
-            textDecorationLine: hasUnderline ? "underline" : "none",
-          },
-        ]}
-        numberOfLines={1}
-        ellipsizeMode="tail"
-      >
-        {text}
-      </Text>
-    </AppContainer>
+      {text}
+    </Text>
   );
 }

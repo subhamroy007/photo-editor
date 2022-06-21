@@ -240,3 +240,107 @@ export function generateTimestampString(timestamp: number) {
       : "00" + miliseconds
   }`;
 }
+
+export function getDurationString(
+  timstamp: number,
+  includeMillis?: boolean,
+  fullFormat?: boolean
+) {
+  const totalHours = Math.floor(timstamp / 3600_000);
+  const remainderMins = timstamp % 3600_000;
+  const totalMins = Math.floor(remainderMins / 60_000);
+  const remainderSecs = remainderMins % 60_000;
+  const totalSeconds = Math.floor(remainderSecs / 1000);
+  const remainderMillis = remainderSecs % 1000;
+
+  const millisString = includeMillis
+    ? "." +
+      (remainderMillis <= 9
+        ? "00" + remainderMillis
+        : remainderMillis <= 99
+        ? "0" + remainderMillis
+        : remainderMillis + "")
+    : "";
+
+  const secString = totalSeconds <= 9 ? "0" + totalSeconds : totalSeconds + "";
+
+  const minString =
+    totalMins <= 9 && (fullFormat || totalHours > 0)
+      ? "0" + totalMins + ":"
+      : totalMins + ":";
+
+  const hourString = fullFormat
+    ? totalHours <= 9
+      ? "0" + totalHours + ":"
+      : totalHours + ":"
+    : totalHours === 0
+    ? ""
+    : totalHours <= 9
+    ? "0" + totalHours + ":"
+    : totalHours + ":";
+
+  return hourString + minString + secString + millisString;
+}
+
+export function getTimeElapsedString(timestamp: number) {
+  const currentTime = new Date();
+
+  const targetTime = new Date(timestamp);
+
+  const currentYear = currentTime.getFullYear();
+  const targetYear = targetTime.getFullYear();
+
+  if (currentYear > targetYear) {
+    const noOfYears = currentYear - targetYear;
+    return noOfYears === 1 ? "1 year ago" : noOfYears + " years ago";
+  } else {
+    const currentMonth = currentTime.getMonth();
+    const targetMonth = targetTime.getMonth();
+
+    if (currentMonth > targetMonth) {
+      const noOfMonths = currentMonth - targetMonth;
+      return noOfMonths === 1 ? "1 month ago" : noOfMonths + " months ago";
+    } else {
+      const currentDay = currentTime.getDate();
+      const targetDay = targetTime.getDate();
+
+      if (currentDay > targetDay) {
+        const noOfDays = currentDay - targetDay;
+        if (noOfDays < 7) {
+          return noOfDays === 1 ? "1 day ago" : noOfDays + " days ago";
+        } else {
+          const noOfWeeks = Math.floor(noOfDays / 7);
+          return noOfWeeks === 1 ? "1 week ago" : noOfWeeks + " weeks ago";
+        }
+      } else {
+        const currentHour = currentTime.getHours();
+        const targetHour = targetTime.getHours();
+        if (currentHour > targetHour) {
+          const noOfHours = currentHour - targetHour;
+          return noOfHours ? "1 hour ago" : noOfHours + " hours ago";
+        } else {
+          const currentMins = currentTime.getMinutes();
+          const targetMins = targetTime.getMinutes();
+          if (currentMins > targetMins) {
+            const noOfMins = currentMins - targetMins;
+            return noOfMins ? "1 min ago" : noOfMins + " mins ago";
+          } else {
+            return "few seconds ago";
+          }
+        }
+      }
+    }
+  }
+}
+
+export function getCountString(count: number) {
+  if (count < 1000) {
+    return count + "";
+  } else if (count < 1_000_000) {
+    return Math.floor(count / 1000) + "K";
+  } else if (count < 1_000_000_000) {
+    return Math.floor(count / 1_000_000) + "M";
+  } else {
+    return Math.floor(count / 1_000_000_000) + "B";
+  }
+}

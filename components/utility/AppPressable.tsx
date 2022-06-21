@@ -1,152 +1,63 @@
-import { useLayout } from "@react-native-community/hooks";
 import { ReactNode, useCallback } from "react";
-import { Easing, StyleProp, Vibration, ViewStyle } from "react-native";
+import { StyleProp, ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
+import { globalStyles } from "../../constants/style";
 
 export type AppPressableProps = {
-  children: ReactNode;
-  disableTap?: boolean;
-  disableLongPress?: boolean;
-  onTap?: () => void;
-  onLongPress?: () => void;
-  vibrateOnLongPress?: boolean;
-  overlayColor?: string;
+  children?: ReactNode;
+  disabled?: boolean;
+  onPress?: () => void;
+  onPressIn?: () => void;
+  onPressOut?: () => void;
   styleProp?: StyleProp<ViewStyle>;
-  animateOnTap?: boolean;
-  animateOnLongPress?: boolean;
-  animateOnTouch?: boolean;
+  hitslop?: number;
 };
 
 export function AppPressable({
   children,
-  disableLongPress,
-  disableTap,
-  onLongPress,
-  onTap,
-  vibrateOnLongPress,
-  overlayColor,
+  hitslop,
+  disabled,
+  onPress,
+  onPressIn,
+  onPressOut,
   styleProp,
-  animateOnTap,
-  animateOnLongPress,
-  animateOnTouch,
 }: AppPressableProps) {
-  const isPressedIn = useSharedValue(false);
-  const isTapped = useSharedValue(false);
-  const isLongPressed = useSharedValue(false);
-
-  const toggleIsPressedIn = useCallback(() => {
-    isPressedIn.value = !isPressedIn.value;
-  }, []);
-
-  const toggleisTapped = useCallback(() => {
-    isTapped.value = !isTapped.value;
-  }, []);
-
-  const toggleIsLongPressed = useCallback(() => {
-    isLongPressed.value = !isLongPressed.value;
-  }, []);
-
-  const longPrssHandler = useCallback(() => {
-    if (vibrateOnLongPress) {
-      Vibration.vibrate(40);
-    }
-    if (onLongPress) {
-      onLongPress();
-    }
-    toggleIsLongPressed();
-  }, [onLongPress, vibrateOnLongPress]);
-
   const tapHandler = useCallback(() => {
-    if (onTap) {
-      onTap();
+    if (onPress) {
+      onPress();
     }
-    toggleisTapped();
-  }, [onTap]);
+  }, [onPress]);
 
-  const longPressGesture = Gesture.LongPress()
-    .enabled(disableLongPress === undefined ? true : !disableLongPress)
-    .onStart(longPrssHandler)
-    .shouldCancelWhenOutside(true)
-    .minDuration(400);
+  const tapStartHandler = useCallback(() => {
+    if (onPressIn) {
+      onPressIn();
+    }
+  }, [onPressIn]);
+
+  const tapEndHandler = useCallback(() => {
+    if (onPressOut) {
+      onPressOut();
+    }
+  }, [onPressOut]);
 
   const tapGesture = Gesture.Tap()
-    .enabled(disableTap === undefined ? true : !disableTap)
+    .enabled(disabled === undefined ? true : !disabled)
+    .hitSlop({ bottom: hitslop, left: hitslop, right: hitslop, top: hitslop })
     .onStart(tapHandler)
-    .shouldCancelWhenOutside(true)
-    .onTouchesDown(toggleIsPressedIn)
-    .onTouchesCancelled(toggleIsPressedIn)
-    .onTouchesUp(toggleIsPressedIn)
-    .maxDuration(disableLongPress === true ? 100000 : 400);
-
-  const compoundGesture = Gesture.Exclusive(tapGesture, longPressGesture);
-
-  const { onLayout, width, height } = useLayout();
-
-  const overlatStyle = useAnimatedStyle(() => {
-    return {
-      zIndex: isPressedIn.value ? 10 : -10,
-      opacity: isPressedIn.value ? 0.4 : 0,
-    };
-  });
-
-  const containerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          scale:
-            animateOnTap && isTapped.value
-              ? withSequence(
-                  withTiming(0.8, { duration: 200 }),
-                  withTiming(1, { duration: 200 }, () => {
-                    runOnJS(toggleisTapped)();
-                  })
-                )
-              : animateOnLongPress && isLongPressed.value
-              ? withSequence(
-                  withTiming(0.8, { duration: 200 }),
-                  withTiming(1, { duration: 200 }, () => {
-                    runOnJS(toggleIsLongPressed)();
-                  })
-                )
-              : animateOnTouch
-              ? withTiming(isPressedIn.value ? 0.8 : 1, { duration: 200 })
-              : 1,
-        },
-      ],
-    };
-  }, [
-    toggleisTapped,
-    toggleIsLongPressed,
-    animateOnTap,
-    animateOnTouch,
-    animateOnLongPress,
-  ]);
+    .onEnd(tapEndHandler)
+    .onBegin(tapStartHandler);
 
   return (
-    <GestureDetector gesture={compoundGesture}>
-      <Animated.View style={[styleProp, containerStyle]} onLayout={onLayout}>
+    <GestureDetector gesture={tapGesture}>
+      <Animated.View
+        style={[
+          globalStyles.alignCenter,
+          globalStyles.justifyCenter,
+          styleProp,
+        ]}
+      >
         {children}
-        {overlayColor && (
-          <Animated.View
-            style={[
-              styleProp,
-              {
-                backgroundColor: overlayColor,
-                width,
-                height,
-                position: "absolute",
-              },
-              overlatStyle,
-            ]}
-          />
-        )}
       </Animated.View>
     </GestureDetector>
   );

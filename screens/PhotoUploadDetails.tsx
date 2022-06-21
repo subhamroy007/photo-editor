@@ -9,7 +9,6 @@ import {
   SIZE_5,
   SIZE_7,
   SIZE_9,
-  TEXT_MEDIUM_SIZE,
 } from "../constants/constants";
 import {
   AccountShortResponse,
@@ -26,7 +25,7 @@ import { LocationSearch } from "../components/create-content/LocationSearch";
 import { PhotoUploadAdvancedOption } from "../components/create-content/PhotoUploadAdvancedOption";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackNavigationParams } from "../navigators/RootStackNavigator";
-import { AppPhoto } from "../components/utility/AppPhoto";
+// import { AppPhoto } from "../components/utility/AppImage";
 
 type ScreenProps = NativeStackScreenProps<
   RootStackNavigationParams,
@@ -183,13 +182,13 @@ export function PhotoUploadDetails({
           paddingLeft={SIZE_5}
           paddingRight={SIZE_5}
         >
-          <AppPhoto
+          {/* <AppPhoto
             media={{ ...list[0] }}
             boxHeight={SIZE_2}
             boxWidth={SIZE_2}
             style="fill"
             styleProp={styles.photo}
-          />
+          /> */}
           <AppTextInput
             multiline={true}
             placeholder="Add Caption"

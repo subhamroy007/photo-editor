@@ -1,20 +1,20 @@
 import React, { useCallback } from "react";
 import { Image, StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Animated, { ZoomIn, ZoomOut } from "react-native-reanimated";
-import { SIZE_16 } from "../../constants/constants";
-import { ImageParams, LocalMediaParams } from "../../constants/types";
-import { AppContainer } from "../utility/AppContainer";
-import { AppIcon } from "../utility/AppIcon";
-import { AppLabel } from "../utility/AppLabel";
-import { AppPressable } from "../utility/AppPressable";
+import { SIZE_16 } from "../../../constants/constants";
+import { ImageParams, LocalMediaParams } from "../../../constants/types";
+import { AppContainer } from "../../utility/AppContainer";
+import { AppIcon } from "../../utility/AppIcon";
+import { AppLabel } from "../../utility/AppLabel";
+import { AppPressable } from "../../utility/AppPressable";
 
 export type PhotoListItemProps = {
   styeProp: StyleProp<ViewStyle>;
   selectionIndex: number;
   isMultiSelectable: boolean;
-  onSelect: (image: LocalMediaParams) => void;
-  onMultiSelect: (image: LocalMediaParams) => void;
-  image: LocalMediaParams;
+  onSelect: (image: ImageParams) => void;
+  onMultiSelect: (image: ImageParams) => void;
+  image: ImageParams;
 };
 
 export const PhotoListItem = React.memo<PhotoListItemProps>(
