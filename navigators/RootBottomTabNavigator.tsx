@@ -19,7 +19,6 @@ export function RootBottomTabNavigatior() {
       detachInactiveScreens
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { position: "absolute" },
       }}
       tabBar={(props) => <Shutter {...props} />}
     >

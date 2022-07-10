@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -14,7 +14,6 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, G, Rect } from "react-native-svg";
 import { SIZE_17 } from "../../constants/constants";
-import { AppContainer } from "../utility/AppContainer";
 
 const size = SIZE_17;
 const width = 5 * StyleSheet.hairlineWidth;
@@ -145,13 +144,13 @@ export function RecordButton({
   }, [percentageComplete]);
 
   return (
-    <AppContainer
-      styleProp={styleProp}
-      width={size}
-      height={size}
-      borderRadius={size / 2}
-      majorAxisAlignment="center"
-      minorAxisAlignment="center"
+    <View
+      style={styleProp}
+      // width={size}
+      // height={size}
+      // borderRadius={size / 2}
+      // majorAxisAlignment="center"
+      // minorAxisAlignment="center"
     >
       <AnimatedSvg
         width={size}
@@ -202,6 +201,6 @@ export function RecordButton({
           y={size / 2 - size / 6}
         />
       </AnimatedSvg>
-    </AppContainer>
+    </View>
   );
 }

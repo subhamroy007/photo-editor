@@ -13,7 +13,6 @@ import { globalStyles } from "../../constants/style";
 import { FeedShortsPostProps } from "../../constants/types";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
-import { AppPressable } from "../utility/AppPressable";
 import { SoundTrackAnimation } from "../utility/SoundTrackAnimation";
 import { FeedPostTemplate } from "./FeedPostTemplate";
 

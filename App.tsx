@@ -1,35 +1,68 @@
 import { NavigationContainer } from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import React from "react";
+import * as Font from "expo-font";
+import * as Asset from "expo-asset";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from "react-native-safe-area-context";
 import { RootStackNavigator } from "./navigators/RootStackNavigator";
+import { Provider } from "react-redux";
+import { initStore, store } from "./api/store";
+import { globalStyles } from "./constants/style";
 
 export default function App() {
-  const [loaded, _] = useFonts({
-    icons: require("./assets/fonts/icons.ttf"),
-    "ubuntu-regular": require("./assets/fonts/Ubuntu-Regular.ttf"),
-    "ubuntu-medium": require("./assets/fonts/Ubuntu-Medium.ttf"),
-    "ubuntu-bold": require("./assets/fonts/Ubuntu-Bold.ttf"),
-    "roboto-regular": require("./assets/fonts/Roboto-Regular.ttf"),
-    "roboto-medium": require("./assets/fonts/Roboto-Medium.ttf"),
-    "roboto-bold": require("./assets/fonts/Roboto-Bold.ttf"),
-  });
+  const [isAppReady, setAppReady] = useState(false);
 
-  if (!loaded) {
+  const initApp = useCallback(async () => {
+    //show splash screen
+    await SplashScreen.preventAutoHideAsync();
+
+    //load all the fonts required in your application
+    await Font.loadAsync({
+      icons: require("./assets/fonts/icons.ttf"),
+      "roboto-regular": require("./assets/fonts/Roboto-Regular.ttf"),
+      "roboto-medium": require("./assets/fonts/Roboto-Medium.ttf"),
+      "roboto-bold": require("./assets/fonts/Roboto-Bold.ttf"),
+    });
+
+    //load all the icons required in your application
+    await Asset.Asset.loadAsync([
+      require("./assets/icons/logo.png"),
+      require("./assets/icons/defaultprofilepicture.png"),
+      require("./assets/icons/defaultprofilepicturex2.png"),
+      require("./assets/icons/defaultprofilepicturex4.png"),
+    ]);
+
+    //populate the global store with initial app data
+    await initStore();
+
+    setAppReady(true);
+  }, []);
+
+  useEffect(() => {
+    initApp();
+  }, []);
+
+  const onNavigationStateReady = useCallback(async () => {
+    await SplashScreen.hideAsync();
+  }, []);
+
+  if (!isAppReady) {
     return null;
   }
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <NavigationContainer>
-        <GestureHandlerRootView style={{ flex: 1, width: "100%" }}>
-          <RootStackNavigator />
+      <Provider store={store}>
+        <GestureHandlerRootView style={globalStyles.flex1}>
+          <NavigationContainer onReady={onNavigationStateReady}>
+            <RootStackNavigator />
+          </NavigationContainer>
         </GestureHandlerRootView>
-      </NavigationContainer>
+      </Provider>
     </SafeAreaProvider>
   );
 }

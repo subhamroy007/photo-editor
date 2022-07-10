@@ -1,11 +1,8 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
-import { vec3 } from "gl-matrix";
 import { ReactNode } from "react";
 import { StyleProp, TextStyle, ViewStyle } from "react-native";
 import { ResizeMode } from "react-native-fast-image";
 import { ComposedGesture } from "react-native-gesture-handler";
-import { Gesture } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gesture";
-import { SharedValue } from "react-native-reanimated";
 import { SceneRendererProps } from "react-native-tab-view";
 import {
   TextureMagFilter,
@@ -329,8 +326,11 @@ export type AppLabelProps = {
   text: string;
   size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
   style?: "medium" | "bold" | "regular";
-  gap?: "small" | "large";
+  gap?: "extra-small" | "small" | "large" | "medium";
+  gapHorizontal?: "extra-small" | "small" | "large" | "medium";
+  gapVertical?: "extra-small" | "small" | "large" | "medium";
   corner?: "small-round" | "large-round";
+  alignment?: "left" | "right" | "center";
   background?: string;
   foreground?: string;
   styleProp?: StyleProp<TextStyle>;
@@ -344,64 +344,13 @@ export type AppLabelProps = {
 export type AppIconProps = {
   name: IconName;
   size?: "small" | "medium" | "large" | "extra-small" | "extra-large";
-  gap?: "small" | "large" | "none";
+  gap?: "small" | "medium" | "large" | "none";
   background?: string;
   foreground?: string;
   styleProp?: StyleProp<TextStyle>;
   isBackgroundVisible?: boolean;
   isBorderVisible?: boolean;
   onPress?: () => void;
-};
-
-export type AppPressableProps = {
-  children?: ReactNode;
-  styleProp?: StyleProp<ViewStyle>;
-  isAnimated?: boolean;
-  disabled?: boolean;
-  onPress?: () => void;
-  activeOverlayColor?: string;
-};
-
-export type AppContainerProps = {
-  isBottomSafe?: boolean;
-  isTopSafe?: boolean;
-  isLeftSafe?: boolean;
-  isRightSafe?: boolean;
-  width?: number | string;
-  height?: number | string;
-  backgroundColor?: string;
-  stretchToFill?: boolean;
-  selfAlignment?: "stretch" | "center" | "start" | "end";
-  paddingLeft?: number;
-  paddingRight?: number;
-  paddingTop?: number;
-  paddingBottom?: number;
-  borderColor?: string;
-  borderWidth?: number;
-  borderBottomWidth?: number;
-  borderTopWidth?: number;
-  borderRadius?: number;
-  borderTopRadius?: number;
-  borderBottomRadius?: number;
-  wrapContent?: boolean;
-  contentOrientation?: "row" | "column";
-  majorAxisAlignment?:
-    | "start"
-    | "end"
-    | "center"
-    | "between"
-    | "around"
-    | "evenly";
-  minorAxisAlignment?: "start" | "end" | "center" | "stretch";
-  contentAlignment?:
-    | "start"
-    | "end"
-    | "center"
-    | "between"
-    | "around"
-    | "stretch";
-  styleProp?: StyleProp<ViewStyle>;
-  children?: ReactNode;
 };
 
 export type ImageParams = {
@@ -495,7 +444,6 @@ export type PostResponse = {
   noOfLikes: number;
   noOfViews: number;
   noOfComments: number;
-  topComments: CommentResponse[];
   topLikes: AccountShortResponse[];
 };
 
@@ -513,23 +461,50 @@ export type AppErrorParams = {
   };
 };
 
+export type PostItemProps = {
+  post: PostResponse;
+  onAuthorFollowButtonPress: () => void;
+  onAuthorAvatarPress: () => void;
+  onMoreIconPress: () => void;
+  onLikeIconPress: (value?: boolean) => void;
+  onCommentIconPress: () => void;
+  onShareIconPress: () => void;
+  onTagIconPress: () => void;
+  onLikeCountPress: () => void;
+  onLocationLabelPress: () => void;
+  onAudioLabelPress: () => void;
+  onEffectLabelPress: () => void;
+  onHashtagPress: (hashtag: string) => void;
+  onAccountIdPress: (userId: string) => void;
+  onCaptionPress: () => void;
+  isCaptionExpanded: boolean;
+  notify: (notification: string) => void;
+  showFollowButton: boolean;
+  isVisible: boolean;
+  isStoryLoading: boolean;
+  isMuted: boolean;
+  toggleMuteState: () => void;
+  toggleFullScreen: () => void;
+  isFullScreen: boolean;
+  width: number;
+};
+
 export type FeedPostProps = {
   post: PostResponse;
-  onFollowButtonPress: (index: number) => void;
-  onMoreIconPress: (index: number) => void;
-  onLikePress: (index: number, value?: boolean) => void;
-  onCommentPress: (index: number) => void;
-  onAuthorIdPress: (index: number) => void;
+  onAuthorFollowButtonPress: (index: number) => void;
   onAuthorAvatarPress: (index: number) => void;
-  onSharePress: (index: number) => void;
-  onBookmarkPress: (index: number) => void;
-  onLocationPress: (index: number) => void;
+  onMoreIconPress: (index: number) => void;
+  onLikeIconPress: (index: number, value?: boolean) => void;
+  onCommentIconPress: (index: number) => void;
+  onShareIconPress: (index: number) => void;
+  onBookmarkIconPress: (index: number) => void;
   onTagIconPress: (index: number) => void;
-  onMusicButtonPress: (index: number) => void;
-  onEffectButtonPress: (index: number) => void;
   onLikeCountPress: (index: number) => void;
+  onLocationLabelPress: (locationId: string) => void;
+  onAudioLabelPress: (audioId: string) => void;
+  onEffectLabelPress: (effectId: string) => void;
   onHashtagPress: (hashtag: string) => void;
-  onAccountPress: (userId: string) => void;
+  onAccountIdPress: (userId: string) => void;
   notify: (notification: string) => void;
   showFollowButton: boolean;
   isVisible: boolean;
@@ -596,49 +571,28 @@ export type MediaLoadingIndicatorProps = {
   posterUri: string;
 };
 
-export type AppGestureComponentProps = {
-  disabled?: boolean;
-  onTap: () => void;
-  onDoubleTap: () => void;
-  onLongPress: () => void;
-  style?: StyleProp<ViewStyle>;
-  children: ReactNode;
+export type MediaLoadingComponentProps = {
+  poster: string;
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
 };
 
-export type MediaRenderingComponentProps = {
-  poster: string;
-  loadAsync: () => Promise<void>;
-  onLoad: () => void;
-  onError: () => void;
-  type: "post" | "account";
-  width: number;
-  height: number;
-} & AppGestureComponentProps;
-
 export type AppImageProps = {
-  media: MediaParams;
+  image: MediaParams;
   width: number;
   height: number;
-  style?: StyleProp<ViewStyle>;
-  disableZoom?: boolean;
-  onPinchStart?: (scale: number) => void;
-  onPinchEnd?: (scale: number) => void;
-  scrollStart?: number;
-  scrollEnd?: number;
-  offset?: SharedValue<number>;
+  zoom?: boolean;
+  onZoomReset?: () => void;
 };
 
 export type AppImageListProps = {
-  media: MediaParams[];
+  images: MediaParams[];
+  onImageIndexChange: (index: number) => void;
+  imageIndex: number;
   width: number;
   height: number;
-  onIndexChange?: (index: number) => void;
-  disabled?: boolean;
-  style?: StyleProp<ViewStyle>;
-  initialIndex?: number;
-  disableZoom?: boolean;
-  onPinchStart?: (scale: number) => void;
-  onPinchEnd?: (scale: number) => void;
+  zoom?: boolean;
 };
 
 //navigator param types
@@ -646,6 +600,25 @@ export type UtilityStackNavigatorParams = {
   Profile: {
     userId: string;
   };
+  Hashtag: {
+    hashtag: string;
+  };
+  PostLikes: {
+    postId: string;
+  };
+  Location: {
+    locationId: string;
+  };
+  Audio: {
+    audioId: string;
+  };
+  Effect: {
+    effectId: string;
+  };
+  Settings: undefined;
+  Saved: undefined;
+  CloseToMe: undefined;
+  Favourites: undefined;
 };
 
 export type RootBottomTabNavigatorParams = {
@@ -666,4 +639,7 @@ export type RootMaterialTopTabNavigatorParams = {
 export type RootStackNavigatorParams = {
   MaterialTopTabs: NavigatorScreenParams<RootMaterialTopTabNavigatorParams>;
   TempScreen: undefined;
+  Comments: {
+    postId: string;
+  };
 };

@@ -5,17 +5,14 @@ import { createIconSetFromFontello } from "@expo/vector-icons";
 import fontelloConfig from "../../font.config.json";
 import {
   COLOR_1,
+  COLOR_7,
   COLOR_8,
-  SIZE_1,
   SIZE_10,
-  SIZE_11,
   SIZE_12,
   SIZE_13,
-  SIZE_17,
-  SIZE_20,
-  SIZE_21,
-  SIZE_22,
+  SIZE_14,
   SIZE_5,
+  SIZE_6,
   SIZE_9,
 } from "../../constants/constants";
 const Icon = createIconSetFromFontello(fontelloConfig, "icons", "icons");
@@ -34,21 +31,24 @@ export function AppIcon({
   let iconSize = 0;
   let containerSize = 0;
   let backgroundColor = "";
-  let borderColor = "";
-  let foregroundColor = foreground ? foreground : COLOR_8;
+  let foregroundColor = foreground
+    ? foreground
+    : isBackgroundVisible
+    ? COLOR_8
+    : COLOR_7;
 
   switch (size) {
     case "small":
-      iconSize = SIZE_10;
+      iconSize = SIZE_6;
       break;
     case "large":
-      iconSize = SIZE_12;
+      iconSize = SIZE_14;
       break;
     case "extra-small":
       iconSize = SIZE_5;
       break;
     case "extra-large":
-      iconSize = SIZE_13;
+      iconSize = SIZE_12;
       break;
     case "medium":
     default:
@@ -58,10 +58,13 @@ export function AppIcon({
 
   switch (gap) {
     case "small":
-      containerSize = Math.round(iconSize * 2.5);
+      containerSize = Math.round(iconSize * 2);
       break;
     case "large":
       containerSize = Math.round(iconSize * 3);
+      break;
+    case "medium":
+      containerSize = Math.round(iconSize * 2.5);
       break;
     case "none":
     default:
@@ -75,12 +78,6 @@ export function AppIcon({
     backgroundColor = "transparent";
   }
 
-  if (isBorderVisible) {
-    borderColor = foreground ? foreground : COLOR_8;
-  } else {
-    borderColor = "transparent";
-  }
-
   return (
     <Icon
       name={name}
@@ -89,10 +86,12 @@ export function AppIcon({
       style={[
         styleProp,
         {
-          borderWidth: 2 * StyleSheet.hairlineWidth,
+          borderWidth: isBorderVisible
+            ? 2 * StyleSheet.hairlineWidth
+            : undefined,
           backgroundColor: backgroundColor,
           color: foregroundColor,
-          borderColor: borderColor,
+          borderColor: isBorderVisible ? foregroundColor : undefined,
           borderRadius:
             isBackgroundVisible || isBorderVisible ? containerSize / 2 : 0,
           width:

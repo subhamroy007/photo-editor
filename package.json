@@ -7,6 +7,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.17.7",
     "@react-native-community/blur": "^3.6.0",
     "@react-native-community/cameraroll": "^4.1.2",
     "@react-native-community/hooks": "^2.8.1",
@@ -26,6 +27,7 @@
     "expo-gl-cpp": "~11.1.0",
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
+    "expo-three": "^6.1.0",
     "gl-matrix": "^3.4.3",
     "ml-matrix": "^6.9.0",
     "react": "17.0.1",
@@ -35,6 +37,7 @@
     "react-native-fast-image": "^8.5.11",
     "react-native-ffmpeg": "^0.5.2",
     "react-native-gesture-handler": "^2.3.2",
+    "react-native-modal": "^13.0.1",
     "react-native-navigation-bar-color": "^2.0.1",
     "react-native-pager-view": "^5.4.15",
     "react-native-reanimated": "^2.3.0",
@@ -45,7 +48,8 @@
     "react-native-tab-view": "^3.1.1",
     "react-native-text-size": "^4.0.0-rc.1",
     "react-native-web": "0.17.1",
-    "react-redux": "^8.0.2"
+    "react-redux": "^8.0.2",
+    "three": "^0.141.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

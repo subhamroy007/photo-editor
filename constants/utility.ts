@@ -344,3 +344,44 @@ export function getCountString(count: number) {
     return Math.floor(count / 1_000_000_000) + "B";
   }
 }
+
+export function getTextSections(text: string) {
+  const pattern = /(#([A-z]|[0-9]|_)+|@([A-z]|_)([A-z]|[0-9]|_)*)/m;
+  let sections: string[] = [];
+
+  while (text && text.length > 0) {
+    //first look for the hashtag or mentions in the target string;
+    const result = pattern.exec(text);
+    let highlightedPhase = "";
+    if (result) {
+      highlightedPhase = result[0];
+    }
+
+    //find the index of both the phases
+    let highlightedPhaseSearchIndex =
+      highlightedPhase === "" ? 20000 : text.indexOf(highlightedPhase);
+
+    //append the phase before the target phase and the phase itself to the section list;
+    if (highlightedPhaseSearchIndex === 20000) {
+      sections.push(text);
+      break;
+    }
+
+    if (highlightedPhaseSearchIndex > 0) {
+      sections.push(text.substring(0, highlightedPhaseSearchIndex));
+    }
+    sections.push(
+      text.substring(
+        highlightedPhaseSearchIndex,
+        highlightedPhase.length + highlightedPhaseSearchIndex
+      )
+    );
+
+    //cut the main string at the end of target phase
+    text = text.substring(
+      highlightedPhase.length + highlightedPhaseSearchIndex
+    );
+  }
+
+  return sections;
+}

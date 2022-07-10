@@ -1,4 +1,4 @@
-import { Dimensions } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 export const SCREEN_WIDTH = Dimensions.get("screen").width;
 export const SCREEN_HEIGHT = Dimensions.get("screen").height;
@@ -67,6 +67,12 @@ export const SIZE_31 = Math.round(SCREEN_WIDTH / 2.4); //150px for 360px
 
 export const SIZE_32 = Math.round(SCREEN_WIDTH / 1.2); //300px for 360px
 
+export const SIZE_33 = Math.round(SCREEN_WIDTH * 1.25); //450px for 360px
+
+export const SIZE_34 = Math.round(SCREEN_WIDTH / 5); //72px for 360px
+
+export const SIZE_35 = Math.round(SCREEN_WIDTH * 1.5); //540px for 360px
+
 export const DAY_IN_MILISECONDS = 3600 * 1000;
 
 export const COLOR_1 = "#3f71f2";
@@ -78,8 +84,14 @@ export const COLOR_6 = "#909090";
 export const COLOR_7 = "black";
 export const COLOR_8 = "white";
 export const COLOR_9 = "#1f1f1f";
-export const COLOR_10 = "red";
+export const COLOR_10 = "#EE3434";
 export const COLOR_11 = "rgba(0, 0, 0, 0.5)";
+export const COLOR_12 = "#474747";
+export const COLOR_13 = "#ebebeb";
+export const COLOR_14 = "red";
+export const COLOR_15 = "grey";
+export const COLOR_16 = "#1BE923";
+export const COLOR_17 = "#d1cbcb";
 
 export const IMAGE_POST_CONTENT_HEIGHT = Math.round(SCREEN_WIDTH * 1.25);
 export const SHORTS_POST_CONTENT_HEIGHT = Math.round(SCREEN_WIDTH * 1.4);
@@ -89,21 +101,30 @@ export const NETWORK_ERROR_CODE = 1000;
 export const MEMORY_CLEAN_UP_ERROR_CODE = 2000;
 export const MEDIA_PLAYBACK_ERROR_CODE = 3000;
 
-export const SHUTTER_HEADER_HEIGHT = SIZE_21;
-export const SHUTTER_TOTAL_HEIGHT = SIZE_32;
-export const SHUTTER_BODY_HEIGHT = SHUTTER_TOTAL_HEIGHT - SHUTTER_HEADER_HEIGHT;
-export const SHUTTER_DRAG_ANIMATION_DURATION_MS = 200;
+export const SHUTTER_HEIGHT = SIZE_30;
+export const SHUTTER_ANIMATION_DURATION_MS = 200;
+export const TAB_BAR_HEIGHT = SIZE_21;
+
+export const MODAL_ANIMATION_DURATION_MS = 300;
 
 export const HEADER_HEIGHT = SIZE_20;
-export const LOGO_SIZE = SIZE_21;
 
-export const POSTER_BLUR_RADIUS = 10;
+export const IMAGE_BLUR_RADIUS = 10;
 
-export const POSTER_FADE_DURATION_MS = 800;
+export const IMAGE_FADE_DURATION_MS = 800;
 
-export const DOUBLE_TAP_POPUP_ANIMATION_VALUE_START = 0.5;
 export const DOUBLE_TAP_POPUP_ANIMATION_VELOCITY = 5;
 export const DOUBLE_TAP_POPUP_ANIMATION_DELAY = 800;
 export const DOUBLE_TAP_POPUP_ANIMATION_END_DURATION = 200;
 
+export const LIST_MINIMUM_VIEW_TIME_MS = 200;
+
 export const IMAGE_ZOOM_RESET_DURATION_MS = 100;
+
+export const LONG_PRESS_DURATION_MS = 200;
+
+export const ACCOUNT_LIST_ITEM_SIZE = SIZE_20 + 2 * SIZE_4;
+
+export const STORY_LIST_ITEM_SIZE = SIZE_34 + 2 * SIZE_4;
+
+export const ASYNC_STORAGE_APP_STATE_KEY = "APP_STATE";

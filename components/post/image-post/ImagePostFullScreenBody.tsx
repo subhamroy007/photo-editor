@@ -5,7 +5,6 @@ import { NETWORK_ERROR_CODE, SIZE_9 } from "../../../constants/constants";
 import { AppErrorParams, MediaParams } from "../../../constants/types";
 import { AppImageList } from "../../utility/AppImageList";
 import { AppLabel } from "../../utility/AppLabel";
-import { AppScalable } from "../../utility/AppScalable";
 
 export type ImagePostFullScreenBodyProps = {
   media: MediaParams[];

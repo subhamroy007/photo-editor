@@ -1,37 +1,46 @@
 import { useEffect } from "react";
-import { Image, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { Image, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   cancelAnimation,
   Easing,
+  Extrapolate,
   interpolate,
   useAnimatedProps,
+  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import Svg, { Circle, G } from "react-native-svg";
+import Svg, { Circle } from "react-native-svg";
 import {
   COLOR_1,
   COLOR_5,
   SIZE_1,
   SIZE_12,
-  SIZE_17,
+  SIZE_14,
   SIZE_20,
   SIZE_21,
-  SIZE_22,
-  SIZE_27,
+  SIZE_34,
+  SIZE_6,
 } from "../../constants/constants";
-import { ImageParams } from "../../constants/types";
-import { AppContainer } from "./AppContainer";
+import { globalStyles } from "../../constants/style";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 export type AppAvatarProps = {
-  size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
+  size?:
+    | "small"
+    | "medium"
+    | "large"
+    | "extra-large"
+    | "extra-small"
+    | "tiny"
+    | "big";
   hasRing?: boolean;
-  type?: "animated" | "inactive" | "active";
+  isActive?: boolean;
+  isAnimated?: boolean;
   styleProp?: StyleProp<ViewStyle>;
   uri: string;
 };
@@ -40,215 +49,186 @@ export function AppAvatar({
   size,
   uri,
   hasRing,
-  type,
+  isActive,
+  isAnimated,
   styleProp,
 }: AppAvatarProps) {
-  const arcAnimatedValue = useSharedValue(0);
+  const animatedValue = useSharedValue(0);
 
-  const svgAnimatedValue = useSharedValue(0);
-
-  type = type ? type : "active";
-  size = size ? size : "small";
+  const circleAnimatedValue = useSharedValue(0);
 
   useEffect(() => {
-    if (type === "animated") {
-      arcAnimatedValue.value = withRepeat(
-        withTiming(1, { duration: 1000 }),
-        -1,
-        true
-      );
-
-      svgAnimatedValue.value = withRepeat(
-        withTiming(1, { duration: 5000, easing: Easing.in(Easing.linear) }),
+    if (isAnimated && hasRing) {
+      animatedValue.value = 0;
+      circleAnimatedValue.value = 0;
+      animatedValue.value = withRepeat(
+        withTiming(1, {
+          duration: 1500,
+          easing: Easing.inOut(Easing.cubic),
+        }),
         -1,
         false
       );
-    } else {
-      cancelAnimation(arcAnimatedValue);
-      cancelAnimation(svgAnimatedValue);
-      arcAnimatedValue.value = 0;
-      svgAnimatedValue.value = 0;
+      circleAnimatedValue.value = withRepeat(
+        withTiming(1, {
+          duration: 750,
+          easing: Easing.inOut(Easing.linear),
+        }),
+        -1,
+        true
+      );
     }
-  }, [type]);
+
+    return () => {
+      if (isAnimated && hasRing) {
+        cancelAnimation(animatedValue);
+        cancelAnimation(circleAnimatedValue);
+        animatedValue.value = 0;
+        circleAnimatedValue.value = 0;
+      }
+    };
+  }, [isAnimated, hasRing]);
 
   let avatarSize = 0;
-  let strokeSize = 0;
+  let strokeWidth = 0;
   let circumference = 0;
-  let noOfSections = 24;
+  let noOfSection = 8;
+  let protion = 0.5;
+  let section = 0;
 
   switch (size) {
+    case "tiny":
+      avatarSize = SIZE_6;
+      strokeWidth = 0;
+      break;
     case "extra-small":
-      avatarSize = SIZE_12;
-      strokeSize = 2 * StyleSheet.hairlineWidth;
+      avatarSize = SIZE_14;
+      strokeWidth = 0;
       break;
-
     case "small":
-      avatarSize = SIZE_27;
-      strokeSize = 3 * StyleSheet.hairlineWidth;
+    default:
+      avatarSize = SIZE_12;
+      strokeWidth = 3 * StyleSheet.hairlineWidth;
       break;
-
     case "medium":
-      avatarSize = SIZE_20;
-      strokeSize = 4 * StyleSheet.hairlineWidth;
+      avatarSize = SIZE_21;
+      strokeWidth = 3 * StyleSheet.hairlineWidth;
       break;
-
     case "large":
-      avatarSize = SIZE_17;
-      strokeSize = 5 * StyleSheet.hairlineWidth;
+      avatarSize = SIZE_20;
+      strokeWidth = 4 * StyleSheet.hairlineWidth;
       break;
-
     case "extra-large":
+      avatarSize = SIZE_34;
+      strokeWidth = 4 * StyleSheet.hairlineWidth;
+      break;
+    case "big":
       avatarSize = SIZE_1;
-      strokeSize = 6 * StyleSheet.hairlineWidth;
+      strokeWidth = 5 * StyleSheet.hairlineWidth;
       break;
   }
 
-  circumference = Math.PI * (avatarSize - strokeSize);
+  circumference = Math.PI * (avatarSize - strokeWidth);
+  section = Math.floor((circumference * protion) / (noOfSection * 2));
 
-  const firstCircleAnimatedProps = useAnimatedProps(() => {
-    const redChannel = interpolate(
-      svgAnimatedValue.value,
-      [0, 0.25, 0.5, 0.75, 1.0],
-      [63, 255, 188, 78, 63]
-    );
+  const sectionRotations = [];
 
-    const greenChannel = interpolate(
-      svgAnimatedValue.value,
-      [0, 0.25, 0.5, 0.75, 1.0],
-      [113, 78, 78, 255, 113]
-    );
+  for (let i = 0; i < noOfSection; i++) {
+    sectionRotations.push(Math.floor((360 * protion) / noOfSection) * i);
+  }
 
-    const blueChannel = interpolate(
-      svgAnimatedValue.value,
-      [0, 0.25, 0.5, 0.75, 1.0],
-      [242, 216, 255, 95, 242]
-    );
-
+  const animatedSvgStyle = useAnimatedStyle(() => {
     return {
-      stroke: `rgb(${redChannel}, ${greenChannel}, ${blueChannel})`,
-      strokeDashoffset:
-        interpolate(
-          arcAnimatedValue.value,
-          [0, 1],
-          [(noOfSections - 1) / noOfSections, 1]
-        ) * circumference,
-    };
-  }, [noOfSections, circumference]);
-
-  const secondCircleAnimatedProps = useAnimatedProps(() => {
-    const redChannel = interpolate(
-      svgAnimatedValue.value,
-      [0, 0.25, 0.5, 0.75, 1.0],
-      [63, 255, 188, 78, 63]
-    );
-
-    const greenChannel = interpolate(
-      svgAnimatedValue.value,
-      [0, 0.25, 0.5, 0.75, 1.0],
-      [113, 78, 78, 255, 113]
-    );
-
-    const blueChannel = interpolate(
-      svgAnimatedValue.value,
-      [0, 0.25, 0.5, 0.75, 1.0],
-      [242, 216, 255, 95, 242]
-    );
-
-    return {
-      stroke: `rgb(${redChannel}, ${greenChannel}, ${blueChannel})`,
-      strokeDashoffset:
-        interpolate(
-          arcAnimatedValue.value,
-          [0, 1],
-          [1, (noOfSections - 1) / noOfSections]
-        ) * circumference,
-    };
-  }, [noOfSections, circumference]);
-
-  const svgAnimatedProps = useAnimatedProps(() => {
-    return {
-      rotation: interpolate(svgAnimatedValue.value, [0, 1], [0, 360]),
+      transform: [
+        {
+          rotateZ:
+            interpolate(
+              animatedValue.value,
+              [0, 1],
+              [0, 360],
+              Extrapolate.CLAMP
+            ) + "deg",
+        },
+      ],
     };
   });
 
-  const sections = [];
-  for (let i = 0; i < noOfSections / 2; i++) {
-    sections.push((i * 720) / noOfSections);
-  }
+  const animatedCircleProps = useAnimatedProps(() => {
+    return {
+      strokeDashoffset: interpolate(
+        circleAnimatedValue.value,
+        [0, 1],
+        [0, circumference]
+      ),
+    };
+  });
+
   return (
-    <AppContainer
-      styleProp={styleProp}
-      width={avatarSize}
-      height={avatarSize}
-      minorAxisAlignment="center"
-      majorAxisAlignment="center"
-      borderRadius={avatarSize / 2}
+    <View
+      style={[
+        styleProp,
+        { width: avatarSize, height: avatarSize },
+        globalStyles.alignCenter,
+        globalStyles.justifyCenter,
+      ]}
     >
       <Image
         source={{ uri }}
         resizeMode="cover"
         style={{
-          width: avatarSize - 4 * strokeSize,
-          height: avatarSize - 4 * strokeSize,
-          borderRadius: (avatarSize - 4 * strokeSize) / 2,
+          width: avatarSize - 4 * strokeWidth,
+          height: avatarSize - 4 * strokeWidth,
+          borderRadius: (avatarSize - 4 * strokeWidth) / 2,
           backgroundColor: COLOR_5,
         }}
         fadeDuration={0}
       />
       {hasRing && (
-        <AnimatedSvg
-          width={avatarSize}
-          height={avatarSize}
-          animatedProps={svgAnimatedProps}
-          style={{ position: "absolute", borderRadius: avatarSize / 2 }}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {type === "animated" ? (
-            sections.map((section) => (
-              <G
+        <>
+          <AnimatedSvg
+            width={avatarSize}
+            height={avatarSize}
+            style={[animatedSvgStyle, globalStyles.absolutePosition]}
+          >
+            {sectionRotations.map((angel) => (
+              <Circle
+                key={angel}
+                stroke={isActive ? COLOR_1 : COLOR_5}
+                strokeWidth={strokeWidth}
+                cx={avatarSize / 2}
+                cy={avatarSize / 2}
                 originX={avatarSize / 2}
                 originY={avatarSize / 2}
-                rotation={section}
-                key={section}
-              >
-                <AnimatedCircle
-                  cx={avatarSize / 2}
-                  cy={avatarSize / 2}
-                  r={(avatarSize - strokeSize) / 2}
-                  strokeWidth={strokeSize}
-                  strokeDasharray={circumference}
-                  originX={avatarSize / 2}
-                  originY={avatarSize / 2}
-                  animatedProps={firstCircleAnimatedProps}
-                />
-                <AnimatedCircle
-                  cx={avatarSize / 2}
-                  cy={avatarSize / 2}
-                  r={(avatarSize - strokeSize) / 2}
-                  strokeWidth={strokeSize}
-                  strokeDasharray={circumference}
-                  originX={avatarSize / 2}
-                  originY={avatarSize / 2}
-                  rotation={360 / noOfSections}
-                  animatedProps={secondCircleAnimatedProps}
-                />
-              </G>
-            ))
-          ) : (
-            <Circle
+                r={(avatarSize - strokeWidth) / 2}
+                strokeDasharray={circumference}
+                strokeDashoffset={circumference - section}
+                rotation={angel - 90}
+              />
+            ))}
+          </AnimatedSvg>
+          <Svg
+            width={avatarSize}
+            height={avatarSize}
+            style={[
+              globalStyles.absolutePosition,
+              { transform: [{ rotateY: "180deg" }] },
+            ]}
+          >
+            <AnimatedCircle
+              stroke={isActive ? COLOR_1 : COLOR_5}
+              strokeWidth={strokeWidth}
               cx={avatarSize / 2}
               cy={avatarSize / 2}
-              r={(avatarSize - strokeSize) / 2}
-              strokeWidth={strokeSize}
-              strokeDasharray={circumference}
               originX={avatarSize / 2}
               originY={avatarSize / 2}
-              stroke={type === "active" ? COLOR_1 : COLOR_5}
+              r={(avatarSize - strokeWidth) / 2}
+              strokeDasharray={circumference}
+              animatedProps={animatedCircleProps}
+              rotation={-90}
             />
-          )}
-        </AnimatedSvg>
+          </Svg>
+        </>
       )}
-    </AppContainer>
+    </View>
   );
 }

@@ -1,10 +1,8 @@
-import React, { useCallback, useState } from "react";
+import React, { useEffect } from "react";
 import { Image, ImageResizeMode, StyleSheet } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
-  Extrapolate,
-  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -12,33 +10,21 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   IMAGE_ZOOM_RESET_DURATION_MS,
-  POSTER_BLUR_RADIUS,
+  IMAGE_BLUR_RADIUS,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { AppImageProps } from "../../constants/types";
 
 export const AppImage = React.memo<AppImageProps>(
-  ({
-    media,
-    height,
-    width,
-    style,
-    disableZoom,
-    onPinchEnd,
-    onPinchStart,
-    offset,
-    scrollEnd,
-    scrollStart,
-  }) => {
-    //calculate the resize mode of the image given the size of the container and the image itself
+  ({ height, image, width, zoom, onZoomReset }) => {
     let resizeMode: ImageResizeMode = "stretch";
 
-    if (media.width <= width && media.height <= height) {
+    if (image.width <= width && image.height <= height) {
       resizeMode = "center";
     } else if (
-      media.width > width &&
-      media.height > height &&
-      media.height >= media.width
+      image.width > width &&
+      image.height > height &&
+      image.height >= image.width
     ) {
       resizeMode = "cover";
     } else {
@@ -46,7 +32,15 @@ export const AppImage = React.memo<AppImageProps>(
     }
 
     const zoomScale = useSharedValue(1);
-    const zoomOffset = useSharedValue(1);
+
+    useEffect(() => {
+      if (zoom) {
+        zoomScale.value = withTiming(2, {
+          duration: IMAGE_ZOOM_RESET_DURATION_MS,
+          easing: Easing.linear,
+        });
+      }
+    }, [zoom]);
 
     const translationXValue = useSharedValue(0);
     const translationXOffset = useSharedValue(0);
@@ -54,39 +48,8 @@ export const AppImage = React.memo<AppImageProps>(
     const translationYValue = useSharedValue(0);
     const translationYOffset = useSharedValue(0);
 
-    const [isDragEnabled, setDragEnabled] = useState(false);
-
-    const pinchStartCallback = useCallback(
-      (scale: number) => {
-        setDragEnabled(true);
-        if (onPinchStart) {
-          onPinchStart(scale);
-        }
-      },
-      [onPinchStart]
-    );
-
-    const pinchEndCallback = useCallback(
-      (scale: number) => {
-        if (scale === 1) {
-          setDragEnabled(false);
-        }
-        if (onPinchEnd) {
-          onPinchEnd(scale);
-        }
-      },
-      [onPinchEnd]
-    );
-
-    const tapHandler = useCallback(() => {
-      setDragEnabled(false);
-      if (onPinchEnd) {
-        onPinchEnd(0);
-      }
-    }, [onPinchEnd]);
-
     const dragGesture = Gesture.Pan()
-      .enabled(isDragEnabled && disableZoom !== true)
+      .enabled(zoom === true)
       .onUpdate(({ translationX, translationY }) => {
         const allowedXTranslation = Math.floor(
           (zoomScale.value - 1) * width * 0.25
@@ -116,40 +79,26 @@ export const AppImage = React.memo<AppImageProps>(
         translationYOffset.value = translationYValue.value;
       });
 
-    const pinchGesture = Gesture.Pinch()
-      .enabled(disableZoom !== true)
-      .onStart(() => {
-        runOnJS(pinchStartCallback)(zoomScale.value);
-      })
-      .onUpdate(({ scale }) => {
-        zoomScale.value = Math.min(2, Math.max(1, zoomOffset.value * scale));
-      })
-      .onEnd(() => {
-        zoomOffset.value = zoomScale.value;
-        runOnJS(pinchEndCallback)(zoomScale.value);
-      });
-
     const tapGesture = Gesture.Tap()
-      .enabled(disableZoom !== true && isDragEnabled)
+      .enabled(zoom === true)
       .onStart(() => {
-        if (zoomScale.value !== 1) {
-          zoomOffset.value = 1;
-          translationXOffset.value = 0;
-          translationYOffset.value = 0;
-          zoomScale.value = withTiming(1, {
-            duration: IMAGE_ZOOM_RESET_DURATION_MS,
-            easing: Easing.linear,
-          });
-          translationXValue.value = withTiming(0, {
-            duration: IMAGE_ZOOM_RESET_DURATION_MS,
-            easing: Easing.linear,
-          });
-          translationYValue.value = withTiming(0, {
-            duration: IMAGE_ZOOM_RESET_DURATION_MS,
-            easing: Easing.linear,
-          });
+        translationXOffset.value = 0;
+        translationYOffset.value = 0;
+        zoomScale.value = withTiming(1, {
+          duration: IMAGE_ZOOM_RESET_DURATION_MS,
+          easing: Easing.linear,
+        });
+        translationXValue.value = withTiming(0, {
+          duration: IMAGE_ZOOM_RESET_DURATION_MS,
+          easing: Easing.linear,
+        });
+        translationYValue.value = withTiming(0, {
+          duration: IMAGE_ZOOM_RESET_DURATION_MS,
+          easing: Easing.linear,
+        });
+        if (onZoomReset) {
+          runOnJS(onZoomReset)();
         }
-        runOnJS(tapHandler)();
       });
 
     const animatedStyle = useAnimatedStyle(() => {
@@ -159,28 +108,14 @@ export const AppImage = React.memo<AppImageProps>(
             scale: zoomScale.value,
           },
           {
-            translateX:
-              translationXValue.value +
-              (scrollEnd !== undefined &&
-              scrollStart !== undefined &&
-              offset !== undefined
-                ? interpolate(
-                    offset.value,
-                    [scrollStart * width, scrollEnd * width],
-                    [0, (scrollEnd - scrollStart) * width],
-                    Extrapolate.CLAMP
-                  )
-                : 0),
+            translateX: translationXValue.value,
           },
           { translateY: translationYValue.value },
         ],
       };
-    }, [scrollStart, scrollEnd, offset, width]);
+    }, []);
 
-    const compositeGesture = Gesture.Exclusive(
-      tapGesture,
-      Gesture.Simultaneous(dragGesture, pinchGesture)
-    );
+    const compositeGesture = Gesture.Exclusive(tapGesture, dragGesture);
 
     return (
       <GestureDetector gesture={compositeGesture}>
@@ -190,19 +125,18 @@ export const AppImage = React.memo<AppImageProps>(
               width,
               height,
             },
-            style,
             animatedStyle,
           ]}
         >
           <Image
-            source={media}
+            source={image}
             fadeDuration={0}
-            blurRadius={POSTER_BLUR_RADIUS}
+            blurRadius={IMAGE_BLUR_RADIUS}
             resizeMode="cover"
             style={[globalStyles.absolutePosition, styles.image]}
           />
           <Image
-            source={media}
+            source={image}
             fadeDuration={0}
             style={styles.image}
             resizeMode={resizeMode}

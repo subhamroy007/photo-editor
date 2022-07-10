@@ -20,9 +20,7 @@ import { getTimeElapsedString } from "../../constants/utility";
 import { AppAvatar } from "../utility/AppAvatar";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
-import { AppPressable } from "../utility/AppPressable";
 import { AppText } from "../utility/AppText";
-import { MediaRenderingComponent } from "../utility/MediaRenderingComponent";
 
 export function FeedPostTemplate(props: FeedPostTemplateProps) {
   const {
@@ -50,17 +48,9 @@ export function FeedPostTemplate(props: FeedPostTemplateProps) {
     children,
     onMoreIconPress,
     onAuthorAvatarPress,
-    onAuthorIdPress,
     showFollowButton,
-    onFollowButtonPress,
-    onAccountPress,
-    onBookmarkPress,
-    onCommentPress,
     onHashtagPress,
     onLikeCountPress,
-    onLikePress,
-    onLocationPress,
-    onSharePress,
     loadAsync,
     onLoad,
     notify,
@@ -486,7 +476,7 @@ const styles = StyleSheet.create({
     marginRight: SIZE_4,
   },
   tagIcon: {
-    left: SIZE_9,
-    bottom: SIZE_9,
+    left: SIZE_5,
+    bottom: SIZE_5,
   },
 });

@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { Image } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import { FullScreenImagePostProps } from "../../constants/types";
-import { usePinchToZoomGesture } from "../../hooks/usePinchToZoomGesture";
 import { AppImageList } from "../utility/AppImageList";
 import { AppLabel } from "../utility/AppLabel";
 import { FullScreenPostTemplate } from "./FullScreenPostTemplate";

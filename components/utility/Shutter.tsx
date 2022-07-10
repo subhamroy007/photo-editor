@@ -1,482 +1,372 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useCallback } from "react";
-import { Pressable, StyleSheet, View, ViewStyle } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useCallback, useState } from "react";
+import { Image, Modal, Pressable, StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
-  Easing,
-  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { selectProfilePicuture } from "../../api/global/appSelector";
 import {
-  COLOR_5,
-  COLOR_6,
   COLOR_7,
   COLOR_8,
-  COLOR_9,
-  SCREEN_WIDTH,
-  SHUTTER_BODY_HEIGHT,
-  SHUTTER_DRAG_ANIMATION_DURATION_MS,
-  SHUTTER_HEADER_HEIGHT,
-  SHUTTER_TOTAL_HEIGHT,
-  SIZE_12,
-  SIZE_5,
+  SHUTTER_ANIMATION_DURATION_MS,
+  SHUTTER_HEIGHT,
+  SIZE_21,
+  SIZE_6,
   SIZE_9,
+  TAB_BAR_HEIGHT,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
-import useAppSafeAreaInsets from "../../hooks/useAppSafeAreaInsets";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 import { AppIcon } from "./AppIcon";
 import { AppLabel } from "./AppLabel";
-import { AppPressable } from "./AppPressable";
+import { Tappable } from "./Tappable";
 
 export function Shutter(props: BottomTabBarProps) {
   const {
-    state: { index, routeNames, routes },
+    state: { index, routes },
     navigation,
   } = props;
 
-  const currentFocusedScreen = routeNames[index];
+  const [isModalOpen, setModalOpen] = useState(false);
 
-  const { left, right } = useAppSafeAreaInsets();
+  const profilePicture = useStoreSelector(selectProfilePicuture);
 
-  const homeIconPressHandler = useCallback(() => {
-    const event = navigation.emit({
-      type: "tabPress",
-      target: routes[0].key,
-      canPreventDefault: true,
-    });
+  const animatedValue = useSharedValue(0);
 
-    if (currentFocusedScreen !== "HomeFeed" && !event.defaultPrevented) {
-      navigation.navigate("HomeFeed");
-    }
-    moveShutter("close");
-  }, [navigation, currentFocusedScreen, routes]);
-
-  const videoIconPressHandler = useCallback(() => {
-    const event = navigation.emit({
-      type: "tabPress",
-      target: routes[1].key,
-      canPreventDefault: true,
-    });
-
-    if (currentFocusedScreen !== "VideoFeed" && !event.defaultPrevented) {
-      navigation.navigate("VideoFeed");
-    }
-    moveShutter("close");
-  }, [navigation, currentFocusedScreen, routes]);
-
-  const shortsIconPressHandler = useCallback(() => {
-    const event = navigation.emit({
-      type: "tabPress",
-      target: routes[2].key,
-      canPreventDefault: true,
-    });
-
-    if (currentFocusedScreen !== "ShortsFeed" && !event.defaultPrevented) {
-      navigation.navigate("ShortsFeed");
-    }
-    moveShutter("close");
-  }, [navigation, currentFocusedScreen, routes]);
-
-  const notificationIconPressHandler = useCallback(() => {
-    const event = navigation.emit({
-      type: "tabPress",
-      target: routes[3].key,
-      canPreventDefault: true,
-    });
-
-    if (currentFocusedScreen !== "Notification" && !event.defaultPrevented) {
-      navigation.navigate("Notification");
-    }
-    moveShutter("close");
-  }, [navigation, currentFocusedScreen, routes]);
-
-  const accountIconPressHandler = useCallback(() => {
-    const event = navigation.emit({
-      type: "tabPress",
-      target: routes[4].key,
-      canPreventDefault: true,
-    });
-
-    if (currentFocusedScreen !== "Account" && !event.defaultPrevented) {
-      navigation.navigate("Account");
-    }
-    moveShutter("close");
-  }, [navigation, currentFocusedScreen, routes]);
-
-  const moveShutter = useCallback((direction: "open" | "close") => {
-    if (direction === "open") {
-      dragValue.value = withTiming(
-        -SHUTTER_BODY_HEIGHT,
-        {
-          duration: SHUTTER_DRAG_ANIMATION_DURATION_MS,
-          easing: Easing.linear,
-        },
-        () => {
-          dragOffset.value = -SHUTTER_BODY_HEIGHT;
-        }
-      );
-    } else {
-      dragValue.value = withTiming(
-        0,
-        {
-          duration: SHUTTER_DRAG_ANIMATION_DURATION_MS,
-          easing: Easing.linear,
-        },
-        () => {
-          dragOffset.value = 0;
-        }
-      );
-    }
+  const toggleModalOpenState = useCallback(() => {
+    setModalOpen((prevState) => !prevState);
   }, []);
 
-  const onOverlayPress = useCallback(() => {
-    moveShutter("close");
-  }, []);
-
-  const dragOffset = useSharedValue(0);
-  const dragValue = useSharedValue(0);
-
-  const dragGesture = Gesture.Pan()
-    .onUpdate(({ translationY }) => {
-      dragValue.value = Math.max(
-        -SHUTTER_BODY_HEIGHT,
-        Math.min(0, dragOffset.value + translationY)
-      );
-    })
-    .onEnd(() => {
-      if (dragValue.value < 0 && dragValue.value > -SHUTTER_BODY_HEIGHT / 2) {
-        runOnJS(moveShutter)("close");
+  const navigateTo = useCallback(
+    (screen: string) => {
+      if (screen === "CreateContent" || screen === "Chat") {
+        navigation
+          .getParent("root-material-top-tab-navigator")
+          ?.navigate(screen);
       } else {
-        runOnJS(moveShutter)("open");
+        navigation.navigate("UtilityStacks", { screen });
       }
-    });
+    },
+    [navigation]
+  );
 
-  const animatedShutterStyle = useAnimatedStyle(() => {
+  const shiftShutter = useCallback(
+    (open: boolean = true, screen?: string) => {
+      animatedValue.value = withTiming(
+        open ? -SHUTTER_HEIGHT : 0,
+        { duration: SHUTTER_ANIMATION_DURATION_MS },
+        () => {
+          if (!open) {
+            runOnJS(toggleModalOpenState)();
+            if (screen) {
+              runOnJS(navigateTo)(screen);
+            }
+          }
+        }
+      );
+    },
+    [navigateTo]
+  );
+
+  const emitEvent = useCallback(
+    (screenIndex: number) => {
+      const event = navigation.emit({
+        type: "tabPress",
+        target: routes[screenIndex].key,
+        canPreventDefault: true,
+      });
+
+      if (
+        routes[index].name !== routes[screenIndex].name &&
+        !event.defaultPrevented
+      ) {
+        navigation.navigate(routes[screenIndex]);
+      }
+    },
+    [navigation, index, routes]
+  );
+
+  const shutterAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ translateY: dragValue.value }],
-      borderTopEndRadius: interpolate(
-        dragValue.value,
-        [0, -SHUTTER_BODY_HEIGHT],
-        [0, SIZE_5]
-      ),
-      borderTopStartRadius: interpolate(
-        dragValue.value,
-        [0, -SHUTTER_BODY_HEIGHT],
-        [0, SIZE_5]
-      ),
+      transform: [{ translateY: animatedValue.value }],
     };
   });
-
-  const animatedOverlayStyle = useAnimatedStyle(() => {
-    return {
-      opacity: interpolate(dragValue.value, [0, -SHUTTER_BODY_HEIGHT], [0, 1]),
-    };
-  });
-
-  const bodyIconStyle: ViewStyle = {
-    marginLeft: (SCREEN_WIDTH - 3 * Math.round(SIZE_9 * 3) - left - right) / 4,
-    marginTop:
-      (SHUTTER_BODY_HEIGHT -
-        SHUTTER_HEADER_HEIGHT -
-        2 * Math.round(SIZE_9 * 3)) /
-      3,
-  };
-
-  const trendingIconPressHandler = useCallback(() => {
-    console.log("going to trending screen");
-    //TODO
-    //navigato to trending screen
-    moveShutter("close");
-  }, [navigation]);
-
-  const historyIconPressHandler = useCallback(() => {
-    console.log("going to history screen");
-    //TODO
-    //navigato to history screen
-    moveShutter("close");
-  }, [navigation]);
-
-  const settingsIconPressHandler = useCallback(() => {
-    console.log("going to settings screen");
-    //TODO
-    //navigato to settings screen
-    moveShutter("close");
-  }, [navigation]);
-
-  const bookmarkIconPressHandler = useCallback(() => {
-    console.log("going to saved screen");
-    //TODO
-    //navigato to history screen
-    moveShutter("close");
-  }, [navigation]);
-
-  const chatIconPressHandler = useCallback(() => {
-    console.log("going to chat screen");
-    //TODO
-    //navigato to chat screen
-    moveShutter("close");
-  }, [navigation]);
-
-  const webIconPressHandler = useCallback(() => {
-    console.log("going to web screen");
-    //TODO
-    //navigato to web screen
-    moveShutter("close");
-  }, [navigation]);
-
-  const createIconPressHandler = useCallback(() => {
-    console.log("going to create screen");
-    //TODO
-    //navigato to create screen
-    moveShutter("close");
-  }, [navigation]);
 
   return (
-    <>
-      <AppPressable
-        styleProp={[
-          StyleSheet.absoluteFill,
-          animatedOverlayStyle,
-          globalStyles.semitransparentBackgroundColor,
+    <View
+      style={[
+        globalStyles.flexRow,
+        globalStyles.primaryLightBackgroundColor,
+        styles.tabBar,
+      ]}
+    >
+      <Pressable
+        onPress={() => {
+          emitEvent(0);
+        }}
+        android_disableSound
+        style={[
+          globalStyles.flex1,
+          globalStyles.justifyCenter,
+          globalStyles.alignCenter,
         ]}
-        onPress={onOverlayPress}
-      />
-
-      <GestureDetector gesture={dragGesture}>
-        <Animated.View
-          style={[
-            animatedShutterStyle,
-            globalStyles.absolutePosition,
-            styles.shutter,
-          ]}
+      >
+        <AppIcon name={index === 0 ? "home-solid" : "home-outline"} />
+      </Pressable>
+      <Pressable
+        onPress={() => {
+          emitEvent(1);
+        }}
+        android_disableSound
+        style={[
+          globalStyles.flex1,
+          globalStyles.justifyCenter,
+          globalStyles.alignCenter,
+        ]}
+      >
+        <AppIcon name={index === 1 ? "video-solid" : "video-outline"} />
+      </Pressable>
+      <Pressable
+        onPress={() => {
+          emitEvent(2);
+        }}
+        android_disableSound
+        style={[
+          globalStyles.flex1,
+          globalStyles.justifyCenter,
+          globalStyles.alignCenter,
+        ]}
+      >
+        <AppIcon name={index === 0 ? "shorts" : "shorts"} />
+      </Pressable>
+      <Pressable
+        onPress={() => {
+          emitEvent(3);
+        }}
+        style={[
+          globalStyles.flex1,
+          globalStyles.justifyCenter,
+          globalStyles.alignCenter,
+        ]}
+      >
+        <AppIcon
+          name={index === 3 ? "notification-solid" : "notification-outline"}
+        />
+      </Pressable>
+      <Pressable
+        onPress={() => {
+          emitEvent(4);
+        }}
+        android_disableSound
+        style={[
+          globalStyles.flex1,
+          globalStyles.justifyCenter,
+          globalStyles.alignCenter,
+        ]}
+      >
+        <Image
+          resizeMode="cover"
+          style={{
+            width: SIZE_9,
+            height: SIZE_9,
+            borderWidth: index === 4 ? StyleSheet.hairlineWidth * 4 : 0,
+            borderColor: COLOR_7,
+            borderRadius: SIZE_9 / 2,
+          }}
+          fadeDuration={0}
+          source={
+            profilePicture === ""
+              ? require("../../assets/icons/defaultprofilepicture.png")
+              : { uri: profilePicture }
+          }
+        />
+      </Pressable>
+      <Pressable
+        onPress={toggleModalOpenState}
+        android_disableSound
+        style={[
+          globalStyles.flex1,
+          globalStyles.justifyCenter,
+          globalStyles.alignCenter,
+        ]}
+      >
+        <AppIcon name="filter" />
+      </Pressable>
+      <Modal
+        visible={isModalOpen}
+        transparent
+        statusBarTranslucent
+        animationType="fade"
+        onShow={() => {
+          shiftShutter();
+        }}
+        onRequestClose={() => {
+          shiftShutter(false);
+        }}
+      >
+        <GestureHandlerRootView
+          style={[globalStyles.flex1, globalStyles.justifyEnd]}
         >
-          <View
+          <Pressable
             style={[
-              globalStyles.flexRow,
-              globalStyles.justifyAround,
-              globalStyles.alignCenter,
-              styles.shutterHeader,
+              globalStyles.semitransparentBackgroundColor,
+              StyleSheet.absoluteFill,
             ]}
-          >
-            <Pressable
-              onPress={homeIconPressHandler}
-              android_disableSound
-              hitSlop={SIZE_9}
-            >
-              <AppIcon
-                name={
-                  currentFocusedScreen === "HomeFeed"
-                    ? "home-solid"
-                    : "home-outline"
-                }
-                foreground="black"
-              />
-            </Pressable>
-            <Pressable
-              onPress={videoIconPressHandler}
-              android_disableSound
-              hitSlop={SIZE_9}
-            >
-              <AppIcon
-                name={
-                  currentFocusedScreen === "VideoFeed"
-                    ? "video-solid"
-                    : "video-outline"
-                }
-                foreground="black"
-              />
-            </Pressable>
-            <Pressable
-              onPress={shortsIconPressHandler}
-              android_disableSound
-              hitSlop={SIZE_9}
-            >
-              <AppIcon
-                name={
-                  currentFocusedScreen === "ShortsFeed" ? "shorts" : "shorts"
-                }
-                foreground="black"
-              />
-            </Pressable>
-            <Pressable
-              onPress={notificationIconPressHandler}
-              android_disableSound
-              hitSlop={SIZE_9}
-            >
-              <AppIcon
-                name={
-                  currentFocusedScreen === "Notification"
-                    ? "notification-solid"
-                    : "notification-outline"
-                }
-                foreground="black"
-              />
-            </Pressable>
-            <Pressable
-              onPress={accountIconPressHandler}
-              android_disableSound
-              hitSlop={SIZE_9}
-            >
-              <AppIcon
-                name={
-                  currentFocusedScreen === "Account"
-                    ? "user-solid"
-                    : "user-outline"
-                }
-                foreground="black"
-              />
-            </Pressable>
-          </View>
-          <View
-            style={[
-              globalStyles.flexRow,
-              globalStyles.alignStart,
-              styles.shutterBody,
-            ]}
-          >
-            <Pressable
-              style={bodyIconStyle}
-              hitSlop={SIZE_9}
-              android_disableSound
-              onPress={settingsIconPressHandler}
-            >
-              <AppIcon
-                name="settings-outline"
-                gap="large"
-                isBackgroundVisible
-                foreground={COLOR_7}
-                background={COLOR_5}
-              />
-            </Pressable>
-
-            <Pressable
-              style={bodyIconStyle}
-              hitSlop={SIZE_9}
-              android_disableSound
-              onPress={bookmarkIconPressHandler}
-            >
-              <AppIcon
-                name="bookmark-outline"
-                gap="large"
-                isBackgroundVisible
-                foreground={COLOR_7}
-                background={COLOR_5}
-              />
-            </Pressable>
-            <Pressable
-              style={bodyIconStyle}
-              hitSlop={SIZE_9}
-              android_disableSound
-              onPress={chatIconPressHandler}
-            >
-              <AppIcon
-                name="send"
-                gap="large"
-                isBackgroundVisible
-                foreground={COLOR_7}
-                background={COLOR_5}
-              />
-            </Pressable>
-            <Pressable
-              style={bodyIconStyle}
-              hitSlop={SIZE_9}
-              android_disableSound
-              onPress={webIconPressHandler}
-            >
-              <AppIcon
-                name="message-outline"
-                gap="large"
-                isBackgroundVisible
-                foreground={COLOR_7}
-                background={COLOR_5}
-              />
-            </Pressable>
-            <Pressable
-              style={bodyIconStyle}
-              hitSlop={SIZE_9}
-              android_disableSound
-              onPress={createIconPressHandler}
-            >
-              <AppIcon
-                name="create"
-                gap="large"
-                isBackgroundVisible
-                foreground={COLOR_7}
-                background={COLOR_5}
-              />
-            </Pressable>
-          </View>
-          {currentFocusedScreen === "VideoFeed" && (
+            onPress={() => {
+              shiftShutter(false);
+            }}
+          />
+          <Animated.View style={[styles.shutter, shutterAnimatedStyle]}>
             <View
               style={[
-                globalStyles.flexRow,
-                globalStyles.flex1,
+                styles.topLabelContainer,
+                globalStyles.justifyCenter,
                 globalStyles.alignCenter,
-                globalStyles.justifyEven,
               ]}
             >
-              <Pressable
-                style={[globalStyles.alignCenter, globalStyles.justifyCenter]}
-                hitSlop={SIZE_9}
-                android_disableSound
-                onPress={trendingIconPressHandler}
-              >
-                <AppIcon name="trending-outline" foreground={COLOR_7} />
-                <AppLabel
-                  size="extra-small"
-                  text="trending"
-                  foreground={COLOR_7}
-                  styleProp={styles.topMarginExtraSmall}
-                />
-              </Pressable>
-
-              <Pressable
-                style={[globalStyles.alignCenter, globalStyles.justifyCenter]}
-                hitSlop={SIZE_9}
-                android_disableSound
-                onPress={historyIconPressHandler}
-              >
-                <AppIcon name="history" foreground={COLOR_7} />
-                <AppLabel
-                  size="extra-small"
-                  text="history"
-                  foreground={COLOR_7}
-                  styleProp={styles.topMarginExtraSmall}
-                />
-              </Pressable>
+              <View
+                style={[
+                  styles.topLabel,
+                  globalStyles.secondaryLightBackgroundColor,
+                ]}
+              />
             </View>
-          )}
-        </Animated.View>
-      </GestureDetector>
-    </>
+            <View style={[globalStyles.flex1, globalStyles.flexRow]}>
+              <Tappable
+                type="animated"
+                onTap={() => {
+                  shiftShutter(false, "Settings");
+                }}
+                style={[
+                  globalStyles.flex1,
+                  globalStyles.justifyCenter,
+                  globalStyles.alignCenter,
+                ]}
+              >
+                <AppIcon name="settings-outline" gap="large" isBorderVisible />
+                <AppLabel
+                  text="Settings"
+                  styleProp={globalStyles.marginTopSize2}
+                />
+              </Tappable>
+              <Tappable
+                type="animated"
+                onTap={() => {
+                  shiftShutter(false, "Saved");
+                }}
+                style={[
+                  globalStyles.flex1,
+                  globalStyles.justifyCenter,
+                  globalStyles.alignCenter,
+                ]}
+              >
+                <AppIcon name="bookmark-outline" gap="large" isBorderVisible />
+                <AppLabel
+                  text="Saved"
+                  styleProp={globalStyles.marginTopSize2}
+                />
+              </Tappable>
+              <Tappable
+                type="animated"
+                onTap={() => {
+                  shiftShutter(false, "CloseToMe");
+                }}
+                style={[
+                  globalStyles.flex1,
+                  globalStyles.justifyCenter,
+                  globalStyles.alignCenter,
+                ]}
+              >
+                <AppIcon name="following" gap="large" isBorderVisible />
+                <AppLabel
+                  text="Close To Me"
+                  styleProp={globalStyles.marginTopSize2}
+                />
+              </Tappable>
+            </View>
+            <View style={[globalStyles.flex1, globalStyles.flexRow]}>
+              <Tappable
+                type="animated"
+                onTap={() => {
+                  shiftShutter(false, "Chat");
+                }}
+                style={[
+                  globalStyles.flex1,
+                  globalStyles.justifyCenter,
+                  globalStyles.alignCenter,
+                ]}
+              >
+                <AppIcon name="message-outline" gap="large" isBorderVisible />
+                <AppLabel
+                  text="Chats"
+                  styleProp={globalStyles.marginTopSize2}
+                />
+              </Tappable>
+              <Tappable
+                type="animated"
+                onTap={() => {
+                  shiftShutter(false, "CreateContent");
+                }}
+                style={[
+                  globalStyles.flex1,
+                  globalStyles.justifyCenter,
+                  globalStyles.alignCenter,
+                ]}
+              >
+                <AppIcon name="create" gap="large" isBorderVisible />
+                <AppLabel
+                  text="Create"
+                  styleProp={globalStyles.marginTopSize2}
+                />
+              </Tappable>
+              <Tappable
+                type="animated"
+                onTap={() => {
+                  shiftShutter(false, "Favourites");
+                }}
+                style={[
+                  globalStyles.flex1,
+                  globalStyles.justifyCenter,
+                  globalStyles.alignCenter,
+                ]}
+              >
+                <AppIcon name="heart-outline" gap="large" isBorderVisible />
+                <AppLabel
+                  text="Favourites"
+                  styleProp={globalStyles.marginTopSize2}
+                />
+              </Tappable>
+            </View>
+          </Animated.View>
+        </GestureHandlerRootView>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   shutter: {
-    width: "100%",
-    height: SHUTTER_TOTAL_HEIGHT,
+    height: SHUTTER_HEIGHT,
     backgroundColor: COLOR_8,
-    bottom: -SHUTTER_BODY_HEIGHT,
-    left: 0,
-    right: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLOR_6,
+    borderTopEndRadius: SIZE_6,
+    borderTopStartRadius: SIZE_6,
+    borderTopLeftRadius: SIZE_6,
+    borderTopRightRadius: SIZE_6,
+    bottom: -SHUTTER_HEIGHT,
   },
-  shutterHeader: {
-    height: SHUTTER_HEADER_HEIGHT,
+  tabBar: {
+    height: TAB_BAR_HEIGHT,
   },
-  shutterBody: {
-    height: SHUTTER_BODY_HEIGHT - SHUTTER_HEADER_HEIGHT,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: COLOR_6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexWrap: "wrap",
+  topLabel: {
+    width: SIZE_21,
+    height: 8 * StyleSheet.hairlineWidth,
+    borderRadius: 8 * StyleSheet.hairlineWidth,
   },
-  topMarginExtraSmall: {
-    marginTop: 4 * StyleSheet.hairlineWidth,
+  topLabelContainer: {
+    height: SIZE_6,
   },
 });

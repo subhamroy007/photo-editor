@@ -33,11 +33,9 @@ import {
   FullScreenPostTemplateProps,
 } from "../../constants/types";
 import { getCountString } from "../../constants/utility";
-import { useDoubleTapPopupGesture } from "../../hooks/useDoubleTapPopupGesture";
 import { AppAvatar } from "../utility/AppAvatar";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
-import { AppPressable } from "../utility/AppPressable";
 import { AppText } from "../utility/AppText";
 import { MediaLoadingIndicator } from "../utility/MediaLoadingIndicator";
 

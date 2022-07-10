@@ -1,29 +1,42 @@
-import { ReactNode } from "react";
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ReactElement } from "react";
 import {
-  COLOR_7,
-  COLOR_8,
-  HEADER_HEIGHT,
-  SIZE_5,
-} from "../../constants/constants";
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { HEADER_HEIGHT } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
+import { IconName } from "../../constants/types";
+import { AppIcon } from "./AppIcon";
 import { AppLabel } from "./AppLabel";
 
 export type AppHeader = {
   transparent?: boolean;
   style?: StyleProp<ViewStyle>;
-  headerLeft?: ReactNode;
-  headerRight?: ReactNode;
+  LeftNode?: () => ReactElement;
+  RightNode?: () => ReactElement;
+  TitleNode?: () => ReactElement;
+  leftIcon?: IconName;
+  rightIcon?: IconName;
   title?: string;
+  onLeftIconPress?: () => void;
+  onRightIconPress?: () => void;
 };
 
 export function AppHeader({
   transparent,
   style,
-  headerLeft,
-  headerRight,
   title,
+  leftIcon,
+  rightIcon,
+  LeftNode,
+  RightNode,
+  TitleNode,
+  onLeftIconPress,
+  onRightIconPress,
 }: AppHeader) {
   return (
     <SafeAreaView
@@ -33,31 +46,83 @@ export function AppHeader({
       <View
         style={[
           globalStyles.flexRow,
-          globalStyles.alignCenter,
-          globalStyles.justifyCenter,
           styles.header,
-          {
-            backgroundColor: transparent === true ? "transparent" : COLOR_8,
-          },
+          transparent ? undefined : globalStyles.primaryLightBackgroundColor,
         ]}
       >
-        {headerLeft && (
-          <View style={[globalStyles.absolutePosition, styles.headerLeft]}>
-            {headerLeft}
+        {leftIcon && (
+          <Pressable
+            style={[
+              globalStyles.alignCenter,
+              globalStyles.flexRow,
+              globalStyles.paddingHorizontalSize4,
+            ]}
+            android_disableSound
+            onPress={onLeftIconPress}
+          >
+            <AppIcon name={leftIcon} />
+          </Pressable>
+        )}
+        {LeftNode && (
+          <View
+            style={[globalStyles.paddingHorizontalSize4, globalStyles.flexRow]}
+          >
+            <LeftNode />
           </View>
         )}
         {title && (
-          <AppLabel
-            size="large"
-            style="bold"
-            text={title}
-            foreground={transparent === true ? COLOR_8 : COLOR_7}
-            styleProp={styles.title}
-          />
+          <View
+            style={[
+              globalStyles.flex1,
+              globalStyles.alignCenter,
+              globalStyles.paddingHorizontalSize4,
+              globalStyles.flexRow,
+            ]}
+          >
+            <AppLabel
+              text={title}
+              size="large"
+              style="bold"
+              styleProp={{ maxWidth: "100%" }}
+            />
+          </View>
         )}
-        {headerRight && (
-          <View style={[globalStyles.absolutePosition, styles.headerRight]}>
-            {headerRight}
+        {TitleNode && (
+          <View
+            style={[
+              globalStyles.flex1,
+              globalStyles.paddingHorizontalSize4,
+              globalStyles.flexRow,
+            ]}
+          >
+            <TitleNode />
+          </View>
+        )}
+        {rightIcon && (
+          <Pressable
+            style={[
+              globalStyles.alignCenter,
+              globalStyles.flexRow,
+              globalStyles.paddingHorizontalSize4,
+              {
+                marginLeft: "auto",
+              },
+            ]}
+            android_disableSound
+            onPress={onRightIconPress}
+          >
+            <AppIcon name={rightIcon} />
+          </Pressable>
+        )}
+        {RightNode && (
+          <View
+            style={[
+              globalStyles.paddingHorizontalSize4,
+              globalStyles.flexRow,
+              { marginLeft: "auto" },
+            ]}
+          >
+            <RightNode />
           </View>
         )}
       </View>
@@ -73,16 +138,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   header: {
-    alignSelf: "stretch",
     height: HEADER_HEIGHT,
-  },
-  headerLeft: {
-    left: SIZE_5,
-  },
-  headerRight: {
-    right: SIZE_5,
-  },
-  title: {
-    maxWidth: "64%",
   },
 });

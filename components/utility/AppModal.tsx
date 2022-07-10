@@ -1,204 +1,161 @@
-import { useBackHandler } from "@react-native-community/hooks";
-import React, {
-  ReactNode,
-  useCallback,
-  useImperativeHandle,
-  useState,
-} from "react";
-import { StyleSheet } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
-  Extrapolate,
-  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { SIZE_3, SIZE_5 } from "../../constants/constants";
-import { AppContainer } from "./AppContainer";
-import { AppLabel } from "./AppLabel";
-
-export type ModalState = "OPEN" | "CLOSE";
-
-export type AppModalStaticParams = {
-  changeModalState: (to: ModalState) => void;
-};
+import {
+  SHUTTER_ANIMATION_DURATION_MS,
+  SIZE_21,
+  SIZE_6,
+} from "../../constants/constants";
+import { globalStyles } from "../../constants/style";
 
 export type AppModalProps = {
+  isVisible: boolean;
+  onDismiss: () => void;
+  beforeOpen?: () => void;
+  afterOpen?: () => void;
+  beforeClose?: () => void;
+  afterClose?: () => void;
   children: ReactNode;
-  title: string;
-  onDragStart?: (from: ModalState) => void;
-  onDragEnd?: () => void;
-  onAnimationStart?: (from: ModalState, to: ModalState) => void;
-  onAnimationEnd?: (from: ModalState, to: ModalState) => void;
   height: number;
 };
 
-export const AppModal = React.forwardRef<AppModalStaticParams, AppModalProps>(
-  (
-    {
-      children,
-      height,
-      title,
-      onAnimationEnd,
-      onAnimationStart,
-      onDragEnd,
-      onDragStart,
-    },
-    ref
-  ) => {
-    const animatedTranslation = useSharedValue(0);
-    const animatedTranslationOffset = useSharedValue(0);
+export function AppModal({
+  isVisible,
+  onDismiss,
+  afterClose,
+  beforeClose,
+  afterOpen,
+  beforeOpen,
+  children,
+  height,
+}: AppModalProps) {
+  const animatedValue = useSharedValue(0);
 
-    const [modalState, setModalState] = useState<ModalState>("CLOSE");
+  const [show, setShow] = useState(false);
 
-    const switchModalState = useCallback((to: ModalState) => {
-      setModalState(to);
-    }, []);
+  const reset = useCallback(() => {
+    setShow(false);
+    if (afterClose) {
+      afterClose();
+    }
+  }, [afterClose]);
 
-    const modalAnimatedStyle = useAnimatedStyle(() => {
-      return {
-        transform: [{ translateY: animatedTranslation.value }],
-      };
-    });
-
-    const backgroundAnimationStyle = useAnimatedStyle(() => {
-      const animatedAlpha = interpolate(
-        animatedTranslation.value,
-        [-height, 0],
-        [0.6, 0],
-        Extrapolate.CLAMP
+  const shiftShutter = useCallback(
+    (open: boolean = true) => {
+      animatedValue.value = withTiming(
+        open ? -height : 0,
+        { duration: SHUTTER_ANIMATION_DURATION_MS },
+        () => {
+          if (open && afterOpen) {
+            runOnJS(afterOpen)();
+          } else if (!open) {
+            runOnJS(reset)();
+          }
+        }
       );
-      return {
-        backgroundColor: `rgba(0, 0, 0, ${animatedAlpha})`,
-      };
-    });
+    },
+    [height, reset, afterOpen]
+  );
 
-    const modalMoveHandler = useCallback(
-      (to: ModalState) => {
-        if (onAnimationStart) {
-          onAnimationStart(modalState, to);
-        }
-        animatedTranslation.value = withTiming(
-          to === "OPEN" ? -height : 0,
-          {
-            duration: 200,
-          },
-          (finish) => {
-            if (finish) {
-              animatedTranslationOffset.value = animatedTranslation.value;
-              runOnJS(switchModalState)(to);
-              if (onAnimationEnd) {
-                runOnJS(onAnimationEnd)(modalState, to);
-              }
-            }
-          }
-        );
-      },
-      [height, onAnimationEnd, onAnimationStart, modalState, switchModalState]
-    );
+  const showHandler = useCallback(() => {
+    if (beforeOpen) {
+      beforeOpen();
+    }
+    shiftShutter(true);
+  }, [shiftShutter]);
 
-    const adjustModalPosition = useCallback(
-      (postion: number, velocity: number) => {
-        if (velocity < 2000 && velocity > -2000) {
-          if (postion < -height / 2) {
-            modalMoveHandler("OPEN");
-          } else {
-            modalMoveHandler("CLOSE");
-          }
-        } else {
-          if (velocity < 0) {
-            modalMoveHandler("OPEN");
-          } else {
-            modalMoveHandler("CLOSE");
-          }
-        }
-      },
-      [height, modalMoveHandler]
-    );
+  const dismissHandler = useCallback(() => {
+    if (beforeClose) {
+      beforeClose();
+    }
+    shiftShutter(false);
+  }, [beforeClose, shiftShutter]);
 
-    const dragGesture = Gesture.Pan()
-      .onStart(() => {
-        if (onDragStart) {
-          runOnJS(onDragStart)(modalState);
-        }
-      })
-      .onUpdate(({ translationY }) => {
-        animatedTranslation.value = Math.max(
-          -height,
-          Math.min(0, translationY + animatedTranslationOffset.value)
-        );
-      })
-      .onEnd(({ velocityY }) => {
-        if (onDragEnd) {
-          runOnJS(onDragEnd)();
-        }
-        runOnJS(adjustModalPosition)(animatedTranslation.value, velocityY);
-      });
+  useEffect(() => {
+    if (isVisible && !show) {
+      setShow(true);
+    } else if (!isVisible && show) {
+      dismissHandler();
+    }
+  }, [show, isVisible, dismissHandler]);
 
-    useImperativeHandle(
-      ref,
-      () => {
-        return {
-          changeModalState: modalMoveHandler,
-        };
-      },
-      [modalMoveHandler]
-    );
+  const modalAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: animatedValue.value }],
+    };
+  });
 
-    useBackHandler(() => {
-      if (modalState === "OPEN") {
-        modalMoveHandler("CLOSE");
-        return true;
-      }
-      return false;
-    });
-
-    return (
-      <AppContainer styleProp={StyleSheet.absoluteFill}>
-        <GestureDetector gesture={dragGesture}>
-          <Animated.View style={[styles.background, backgroundAnimationStyle]}>
-            <Animated.View
+  return (
+    <Modal
+      transparent
+      statusBarTranslucent
+      style={[globalStyles.justifyEnd]}
+      onRequestClose={onDismiss}
+      onShow={showHandler}
+      visible={show}
+    >
+      <GestureHandlerRootView
+        style={[globalStyles.flex1, globalStyles.justifyEnd]}
+      >
+        <Pressable
+          style={[
+            globalStyles.semitransparentBackgroundColor,
+            StyleSheet.absoluteFill,
+          ]}
+          onPress={onDismiss}
+          android_disableSound
+        />
+        <Animated.View
+          style={[
+            globalStyles.primaryLightBackgroundColor,
+            styles.modal,
+            modalAnimatedStyle,
+            {
+              height,
+              bottom: -height,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.topLabelContainer,
+              globalStyles.justifyCenter,
+              globalStyles.alignCenter,
+            ]}
+          >
+            <View
               style={[
-                styles.modal,
-                modalAnimatedStyle,
-                { height, bottom: -height },
+                styles.topLabel,
+                globalStyles.secondaryLightBackgroundColor,
               ]}
-            >
-              <AppContainer
-                borderTopRadius={SIZE_5}
-                paddingBottom={SIZE_3}
-                paddingLeft={SIZE_3}
-                paddingRight={SIZE_3}
-                paddingTop={SIZE_3}
-                borderBottomWidth={StyleSheet.hairlineWidth}
-                selfAlignment="stretch"
-              >
-                <AppLabel text={title} foreground="black" style="bold" />
-              </AppContainer>
-              {children}
-            </Animated.View>
-          </Animated.View>
-        </GestureDetector>
-      </AppContainer>
-    );
-  }
-);
+            />
+          </View>
+          {children}
+        </Animated.View>
+      </GestureHandlerRootView>
+    </Modal>
+  );
+}
 
 const styles = StyleSheet.create({
   modal: {
-    backgroundColor: "white",
-    borderTopStartRadius: SIZE_5,
-    borderTopEndRadius: SIZE_5,
-    alignSelf: "stretch",
-    justifyContent: "flex-start",
-    alignItems: "center",
+    borderTopEndRadius: SIZE_6,
+    borderTopStartRadius: SIZE_6,
+    borderTopLeftRadius: SIZE_6,
+    borderTopRightRadius: SIZE_6,
   },
-  background: {
-    alignSelf: "stretch",
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "flex-end",
+  topLabel: {
+    width: SIZE_21,
+    height: 8 * StyleSheet.hairlineWidth,
+    borderRadius: 8 * StyleSheet.hairlineWidth,
+  },
+  topLabelContainer: {
+    height: SIZE_6,
   },
 });

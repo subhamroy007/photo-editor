@@ -4,7 +4,9 @@ import {
   RootMaterialTopTabNavigatorParams,
   RootStackNavigatorParams,
 } from "../constants/types";
+import { Comments } from "../screens/root-stacks/Comments";
 import { TempScreen } from "../screens/TempScreen";
+import { RootBottomTabNavigatior } from "./RootBottomTabNavigator";
 import { RootMaterialTopTabNavigator } from "./RootMaterialTopTabNavigator";
 
 const Tab = createNativeStackNavigator<RootStackNavigatorParams>();
@@ -33,6 +35,12 @@ export function RootStackNavigator() {
         name="TempScreen"
         component={TempScreen}
         navigationKey="temp-screen"
+      />
+      <Tab.Screen
+        name="Comments"
+        component={Comments}
+        navigationKey="comments"
+        getId={() => "comments"}
       />
     </Tab.Navigator>
   );

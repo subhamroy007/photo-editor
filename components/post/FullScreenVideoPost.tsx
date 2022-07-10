@@ -34,7 +34,6 @@ import { FullScreenVideoPostProps } from "../../constants/types";
 import { getDurationString } from "../../constants/utility";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
-import { AppPressable } from "../utility/AppPressable";
 import { FullScreenPostTemplate } from "./FullScreenPostTemplate";
 
 export const FullScreenVideoPost = React.memo<FullScreenVideoPostProps>(

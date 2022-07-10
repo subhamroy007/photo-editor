@@ -10,7 +10,6 @@ import {
 import { globalStyles } from "../../constants/style";
 import { FeedVideoPostProps } from "../../constants/types";
 import { AppIcon } from "../utility/AppIcon";
-import { AppPressable } from "../utility/AppPressable";
 import { FeedPostTemplate } from "./FeedPostTemplate";
 
 export const FeedVideoPost = React.memo<FeedVideoPostProps>(

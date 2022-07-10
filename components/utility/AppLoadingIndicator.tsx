@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -23,9 +23,14 @@ const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 export type AppLoadingIndicatorProps = {
   color?: string;
   size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
+  style?: StyleProp<ViewStyle>;
 };
 
-export function AppLoadingIndicator({ color, size }: AppLoadingIndicatorProps) {
+export function AppLoadingIndicator({
+  color,
+  size,
+  style,
+}: AppLoadingIndicatorProps) {
   color = color ? color : COLOR_6;
   size = size ? size : "medium";
 
@@ -83,7 +88,7 @@ export function AppLoadingIndicator({ color, size }: AppLoadingIndicatorProps) {
       width={indicatorSize}
       height={indicatorSize}
       strokeWidth={strokeSize}
-      style={{ borderRadius: indicatorSize / 2 }}
+      style={[{ borderRadius: indicatorSize / 2 }, style]}
       stroke={color}
       animatedProps={animatedProps}
     >

@@ -1,34 +1,36 @@
-import { useCallback } from "react";
-import { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
-import Animated, {
-  Extrapolate,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
+import { useLayout } from "@react-native-community/hooks";
+import { useCallback, useEffect, useRef } from "react";
+import {
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+} from "react-native";
+import { globalStyles } from "../../constants/style";
 import { AppImageListProps } from "../../constants/types";
 import { AppImage } from "./AppImage";
 
 export function AppImageList({
-  media,
+  images,
+  onImageIndexChange,
+  imageIndex,
   height,
   width,
-  onIndexChange,
-  style,
-  disabled,
-  initialIndex,
-  disableZoom,
-  onPinchEnd,
-  onPinchStart,
+  zoom,
 }: AppImageListProps) {
-  const scrollOffset = useSharedValue(0);
+  const scrollOffset = useRef<Animated.Value>(new Animated.Value(0)).current;
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: ({ contentOffset: { x } }) => {
-      scrollOffset.value = x;
-    },
-  });
+  const scrollRef = useRef<ScrollView | null>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        animated: false,
+        x: imageIndex * width,
+        y: 0,
+      });
+    }
+  }, []);
 
   const onMomentumScrollEnd = useCallback(
     ({
@@ -36,39 +38,58 @@ export function AppImageList({
         contentOffset: { x },
       },
     }: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (onIndexChange) {
-        onIndexChange(Math.floor(x / width));
+      if (onImageIndexChange) {
+        onImageIndexChange(x);
       }
     },
-    [width, onIndexChange]
+    []
   );
 
   return (
     <Animated.ScrollView
-      onScroll={scrollHandler}
-      style={[{ maxHeight: height, maxWidth: width }, style]}
+      ref={scrollRef}
+      onScroll={Animated.event(
+        [
+          {
+            nativeEvent: {
+              contentOffset: {
+                x: scrollOffset,
+              },
+            },
+          },
+        ],
+        { useNativeDriver: true }
+      )}
       horizontal={true}
       showsHorizontalScrollIndicator={false}
       pagingEnabled={true}
       onMomentumScrollEnd={onMomentumScrollEnd}
-      contentOffset={{ y: 0, x: width * (initialIndex ? initialIndex : 0) }}
       overScrollMode="never"
-      scrollEnabled={disabled !== true}
+      scrollEnabled={zoom !== true}
     >
-      {media.map((image, index) => {
+      {images.map((image, index) => {
         return (
-          <AppImage
-            height={height}
-            media={image}
-            width={width}
+          <Animated.View
             key={image.uri}
-            disableZoom={disableZoom}
-            onPinchEnd={onPinchEnd}
-            onPinchStart={onPinchStart}
-            offset={scrollOffset}
-            scrollEnd={media.length - 1}
-            scrollStart={index}
-          />
+            style={{
+              transform: [
+                {
+                  translateX: scrollOffset.interpolate({
+                    inputRange: [index * width, (images.length - 1) * width],
+                    outputRange: [0, (images.length - 1 - index) * width],
+                    extrapolate: "clamp",
+                  }),
+                },
+              ],
+            }}
+          >
+            <AppImage
+              height={height}
+              width={width}
+              image={image}
+              zoom={zoom && imageIndex === index}
+            />
+          </Animated.View>
         );
       })}
     </Animated.ScrollView>
