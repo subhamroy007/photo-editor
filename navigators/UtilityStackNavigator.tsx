@@ -1,12 +1,10 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { UtilityStackNavigatorParams } from "../constants/types";
 import { Audio } from "../screens/utility-stacks/Audio";
-import { CloseToMe } from "../screens/utility-stacks/CloseToMe";
 import { Effect } from "../screens/utility-stacks/Effect";
 import { Favourites } from "../screens/utility-stacks/Favourites";
 import { Hashtag } from "../screens/utility-stacks/Hashtag";
 import { Location } from "../screens/utility-stacks/Location";
-import { PostLikes } from "../screens/utility-stacks/PostLikes";
 import { Profile } from "../screens/utility-stacks/Profile";
 import { Saved } from "../screens/utility-stacks/Saved";
 import { Settings } from "../screens/utility-stacks/Settings";
@@ -18,9 +16,6 @@ export function UtilityStackNavigator() {
     <Tab.Navigator
       id="utility-stack-navigator"
       screenOptions={{
-        gestureEnabled: false,
-        customAnimationOnGesture: false,
-        fullScreenGestureEnabled: false,
         headerShown: false,
         animation: "slide_from_right",
       }}
@@ -28,14 +23,8 @@ export function UtilityStackNavigator() {
       <Tab.Screen
         name="Profile"
         navigationKey="profile"
-        getId={({ params: { userId } }) => "profile-" + userId}
+        getId={({ params: { userid } }) => "profile-" + userid}
         component={Profile}
-      />
-      <Tab.Screen
-        name="CloseToMe"
-        navigationKey="closetome"
-        getId={() => "closetome"}
-        component={CloseToMe}
       />
       <Tab.Screen
         name="Favourites"
@@ -78,12 +67,6 @@ export function UtilityStackNavigator() {
         navigationKey="hashtag"
         getId={() => "hashtag"}
         component={Hashtag}
-      />
-      <Tab.Screen
-        name="PostLikes"
-        navigationKey="postlikes"
-        getId={() => "postlikes"}
-        component={PostLikes}
       />
     </Tab.Navigator>
   );

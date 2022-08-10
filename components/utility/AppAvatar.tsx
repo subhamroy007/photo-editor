@@ -12,47 +12,47 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
+import { selectAppTheme } from "../../api/global/appSelector";
 import {
   COLOR_1,
+  COLOR_19,
   COLOR_5,
   SIZE_1,
   SIZE_12,
-  SIZE_14,
+  SIZE_15,
   SIZE_20,
-  SIZE_21,
   SIZE_34,
   SIZE_6,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
+import { MediaParams } from "../../constants/types";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 export type AppAvatarProps = {
-  size?:
-    | "small"
-    | "medium"
-    | "large"
-    | "extra-large"
-    | "extra-small"
-    | "tiny"
-    | "big";
+  size?: "small" | "medium" | "large" | "extra-large" | "extra-small" | "big";
   hasRing?: boolean;
   isActive?: boolean;
   isAnimated?: boolean;
   styleProp?: StyleProp<ViewStyle>;
-  uri: string;
+  image: MediaParams;
+  transparent?: boolean;
 };
 
 export function AppAvatar({
   size,
-  uri,
+  image,
   hasRing,
   isActive,
   isAnimated,
   styleProp,
+  transparent,
 }: AppAvatarProps) {
+  const theme = useStoreSelector(selectAppTheme);
+
   const animatedValue = useSharedValue(0);
 
   const circleAnimatedValue = useSharedValue(0);
@@ -97,21 +97,12 @@ export function AppAvatar({
   let section = 0;
 
   switch (size) {
-    case "tiny":
+    case "extra-small":
       avatarSize = SIZE_6;
       strokeWidth = 0;
       break;
-    case "extra-small":
-      avatarSize = SIZE_14;
-      strokeWidth = 0;
-      break;
-    case "small":
-    default:
-      avatarSize = SIZE_12;
-      strokeWidth = 3 * StyleSheet.hairlineWidth;
-      break;
     case "medium":
-      avatarSize = SIZE_21;
+      avatarSize = SIZE_15;
       strokeWidth = 3 * StyleSheet.hairlineWidth;
       break;
     case "large":
@@ -125,6 +116,11 @@ export function AppAvatar({
     case "big":
       avatarSize = SIZE_1;
       strokeWidth = 5 * StyleSheet.hairlineWidth;
+      break;
+    case "small":
+    default:
+      avatarSize = SIZE_12;
+      strokeWidth = 3 * StyleSheet.hairlineWidth;
       break;
   }
 
@@ -173,14 +169,18 @@ export function AppAvatar({
       ]}
     >
       <Image
-        source={{ uri }}
+        source={image}
         resizeMode="cover"
-        style={{
-          width: avatarSize - 4 * strokeWidth,
-          height: avatarSize - 4 * strokeWidth,
-          borderRadius: (avatarSize - 4 * strokeWidth) / 2,
-          backgroundColor: COLOR_5,
-        }}
+        style={[
+          {
+            width: avatarSize - 4 * strokeWidth,
+            height: avatarSize - 4 * strokeWidth,
+            borderRadius: (avatarSize - 4 * strokeWidth) / 2,
+          },
+          transparent || theme === "dark"
+            ? globalStyles.secondaryDarkBackgroundColor
+            : globalStyles.secondaryLightBackgroundColor,
+        ]}
         fadeDuration={0}
       />
       {hasRing && (
@@ -193,7 +193,13 @@ export function AppAvatar({
             {sectionRotations.map((angel) => (
               <Circle
                 key={angel}
-                stroke={isActive ? COLOR_1 : COLOR_5}
+                stroke={
+                  isActive
+                    ? COLOR_1
+                    : transparent || theme === "dark"
+                    ? COLOR_19
+                    : COLOR_5
+                }
                 strokeWidth={strokeWidth}
                 cx={avatarSize / 2}
                 cy={avatarSize / 2}
@@ -215,7 +221,13 @@ export function AppAvatar({
             ]}
           >
             <AnimatedCircle
-              stroke={isActive ? COLOR_1 : COLOR_5}
+              stroke={
+                isActive
+                  ? COLOR_1
+                  : transparent || theme === "dark"
+                  ? COLOR_19
+                  : COLOR_5
+              }
               strokeWidth={strokeWidth}
               cx={avatarSize / 2}
               cy={avatarSize / 2}

@@ -1,161 +1,307 @@
-import { ReactNode, useCallback, useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { useLayout } from "@react-native-community/hooks";
+import { useCallback, useEffect, useRef } from "react";
 import {
-  SHUTTER_ANIMATION_DURATION_MS,
-  SIZE_21,
-  SIZE_6,
+  Animated,
+  InteractionManager,
+  Modal,
+  PanResponder,
+  ScrollView,
+  View,
+} from "react-native";
+import { selectAppTheme } from "../../api/global/appSelector";
+import {
+  COLOR_19,
+  COLOR_5,
+  COLOR_7,
+  COLOR_8,
+  MODAL_ANIMATION_DURATION_MS,
+  SCREEN_HEIGHT,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
+import { IconName } from "../../constants/types";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
+import { AppIcon } from "./AppIcon";
+import { AppLabel } from "./AppLabel";
+import { AppPressable } from "./AppPressable";
 
 export type AppModalProps = {
+  grids?: {
+    list: {
+      name: IconName;
+      color?: string;
+      onPress: () => void;
+      label: string;
+    }[];
+    size: "medium" | "large";
+  };
+  rows?: {
+    color?: string;
+    icon?: IconName;
+    text: string;
+    onPress: () => void;
+  }[];
+  items?: {
+    title?: string;
+    info?: string;
+    list: string[];
+    onPress: (item: string) => void;
+  };
   isVisible: boolean;
   onDismiss: () => void;
-  beforeOpen?: () => void;
-  afterOpen?: () => void;
-  beforeClose?: () => void;
-  afterClose?: () => void;
-  children: ReactNode;
-  height: number;
 };
 
 export function AppModal({
+  rows,
+  grids,
   isVisible,
+  items,
   onDismiss,
-  afterClose,
-  beforeClose,
-  afterOpen,
-  beforeOpen,
-  children,
-  height,
 }: AppModalProps) {
-  const animatedValue = useSharedValue(0);
+  const { height, onLayout } = useLayout();
 
-  const [show, setShow] = useState(false);
+  const theme = useStoreSelector(selectAppTheme);
 
-  const reset = useCallback(() => {
-    setShow(false);
-    if (afterClose) {
-      afterClose();
-    }
-  }, [afterClose]);
+  const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
+  const offset = useRef(0);
+  const minValue = useRef(0);
 
-  const shiftShutter = useCallback(
-    (open: boolean = true) => {
-      animatedValue.value = withTiming(
-        open ? -height : 0,
-        { duration: SHUTTER_ANIMATION_DURATION_MS },
-        () => {
-          if (open && afterOpen) {
-            runOnJS(afterOpen)();
-          } else if (!open) {
-            runOnJS(reset)();
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        animatedValue.setValue(
+          Math.max(
+            minValue.current,
+            Math.min(0, offset.current + gestureState.dy)
+          )
+        );
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const lastOffsetValue = offset.current + gestureState.dy;
+        if (gestureState.dy === 0 && gestureState.vy === 0) {
+          onRequestClose();
+        } else if (gestureState.vy >= 2) {
+          onRequestClose();
+        } else if (gestureState.vy <= -2) {
+          shiftModal(minValue.current);
+        } else {
+          if (lastOffsetValue < minValue.current / 2) {
+            shiftModal(minValue.current);
+          } else {
+            onRequestClose();
           }
         }
-      );
-    },
-    [height, reset, afterOpen]
-  );
+      },
+    })
+  ).current;
 
-  const showHandler = useCallback(() => {
-    if (beforeOpen) {
-      beforeOpen();
-    }
-    shiftShutter(true);
-  }, [shiftShutter]);
+  const onRequestClose = useCallback(() => {
+    shiftModal(0);
+    InteractionManager.runAfterInteractions(onDismiss);
+  }, [onDismiss]);
 
-  const dismissHandler = useCallback(() => {
-    if (beforeClose) {
-      beforeClose();
-    }
-    shiftShutter(false);
-  }, [beforeClose, shiftShutter]);
+  const shiftModal = useCallback((value: number) => {
+    Animated.timing(animatedValue, {
+      toValue: value,
+      useNativeDriver: true,
+      duration: MODAL_ANIMATION_DURATION_MS,
+      isInteraction: true,
+    }).start((finished) => {
+      if (finished) {
+        offset.current = value;
+      }
+    });
+  }, []);
 
   useEffect(() => {
-    if (isVisible && !show) {
-      setShow(true);
-    } else if (!isVisible && show) {
-      dismissHandler();
+    minValue.current = -height;
+    if (height > 0 && isVisible) {
+      shiftModal(-height);
     }
-  }, [show, isVisible, dismissHandler]);
+  }, [height, isVisible]);
 
-  const modalAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: animatedValue.value }],
-    };
-  });
+  const pressHandler = useCallback(
+    (index: number, type: "icon" | "button" | "item") => {
+      onRequestClose();
+      switch (type) {
+        case "button":
+          InteractionManager.runAfterInteractions(rows![index].onPress);
+          break;
+        case "item":
+          InteractionManager.runAfterInteractions(() => {
+            items?.onPress(items.list[index]);
+          });
+          break;
+        case "icon":
+          InteractionManager.runAfterInteractions(grids?.list[index].onPress);
+          break;
+      }
+    },
+    [grids, rows, items]
+  );
 
   return (
     <Modal
+      visible={isVisible}
+      onRequestClose={onRequestClose}
       transparent
       statusBarTranslucent
-      style={[globalStyles.justifyEnd]}
-      onRequestClose={onDismiss}
-      onShow={showHandler}
-      visible={show}
     >
-      <GestureHandlerRootView
-        style={[globalStyles.flex1, globalStyles.justifyEnd]}
+      <View
+        style={[
+          globalStyles.flex1,
+          globalStyles.semiTransparentBackgroundColor2,
+        ]}
+        {...panResponder.panHandlers}
+      ></View>
+      <Animated.View
+        onLayout={onLayout}
+        style={[
+          theme === "light"
+            ? globalStyles.primaryLightBackgroundColor
+            : globalStyles.primaryDarkBackgroundColor,
+          globalStyles.borderTopRadiusSize3,
+          globalStyles.absolutePosition,
+          {
+            maxHeight: SCREEN_HEIGHT * 0.8,
+            top: "100%",
+            width: "100%",
+            transform: [
+              {
+                translateY: animatedValue,
+              },
+            ],
+          },
+        ]}
       >
-        <Pressable
-          style={[
-            globalStyles.semitransparentBackgroundColor,
-            StyleSheet.absoluteFill,
-          ]}
-          onPress={onDismiss}
-          android_disableSound
-        />
-        <Animated.View
-          style={[
-            globalStyles.primaryLightBackgroundColor,
-            styles.modal,
-            modalAnimatedStyle,
-            {
-              height,
-              bottom: -height,
-            },
-          ]}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          overScrollMode="never"
+          contentContainerStyle={globalStyles.paddingVerticalSize4}
         >
-          <View
-            style={[
-              styles.topLabelContainer,
-              globalStyles.justifyCenter,
-              globalStyles.alignCenter,
-            ]}
-          >
+          {grids && (
             <View
               style={[
-                styles.topLabel,
-                globalStyles.secondaryLightBackgroundColor,
+                globalStyles.flexRow,
+                globalStyles.flexWrap,
+                globalStyles.primaryBottomBorderWidth,
+                theme === "dark"
+                  ? globalStyles.primaryLightBorderColor
+                  : globalStyles.primaryDarkBorderColor,
+                globalStyles.paddingVerticalSize4,
+                globalStyles.justifyAround,
               ]}
-            />
-          </View>
-          {children}
-        </Animated.View>
-      </GestureHandlerRootView>
+            >
+              {grids.list.map((item, index) => {
+                return (
+                  <AppPressable
+                    type="animated"
+                    onPress={() => {
+                      pressHandler(index, "icon");
+                    }}
+                    key={item.label}
+                    style={[
+                      { width: grids.size === "medium" ? "25%" : "33.33%" },
+                      globalStyles.alignCenter,
+                      globalStyles.justifyCenter,
+                      globalStyles.paddingVerticalSize4,
+                    ]}
+                  >
+                    <AppIcon
+                      name={item.name}
+                      gap={grids.size}
+                      borderVisible
+                      foreground={item.color}
+                    />
+                    <AppLabel
+                      text={item.label}
+                      foreground={item.color}
+                      styleProp={globalStyles.marginTopSize2}
+                    />
+                  </AppPressable>
+                );
+              })}
+            </View>
+          )}
+          {rows && (
+            <>
+              {rows.map((item, index) => {
+                return (
+                  <AppPressable
+                    key={item.text}
+                    style={[
+                      globalStyles.flexRow,
+                      globalStyles.paddingHorizontalSize4,
+                      globalStyles.paddingVerticalSize4,
+                    ]}
+                    onPress={() => {
+                      pressHandler(index, "button");
+                    }}
+                    type="underlay"
+                  >
+                    {item.icon && (
+                      <AppIcon
+                        name={item.icon}
+                        size="small"
+                        styleProp={globalStyles.marginRightSize2}
+                        foreground={item.color}
+                      />
+                    )}
+                    <AppLabel
+                      text={item.text}
+                      size="medium"
+                      style="regular"
+                      foreground={item.color}
+                    />
+                  </AppPressable>
+                );
+              })}
+            </>
+          )}
+          {items && (
+            <>
+              {items.title && (
+                <AppLabel
+                  text={items.title}
+                  style="medium"
+                  size="medium"
+                  alignment="left"
+                  gap="large"
+                />
+              )}
+              {items.info && (
+                <AppLabel
+                  style="regular"
+                  text={items.info}
+                  foreground={theme === "dark" ? COLOR_19 : COLOR_5}
+                  noOfLines={4}
+                  alignment="center"
+                  gapHorizontal="large"
+                  gapVertical="extra-small"
+                />
+              )}
+              {items.list.map((item, index) => {
+                return (
+                  <AppPressable
+                    key={item}
+                    onPress={() => pressHandler(index, "item")}
+                    type="underlay"
+                  >
+                    <AppLabel
+                      text={item}
+                      alignment="left"
+                      gap="large"
+                      style="regular"
+                      size="medium"
+                    />
+                  </AppPressable>
+                );
+              })}
+            </>
+          )}
+        </ScrollView>
+      </Animated.View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  modal: {
-    borderTopEndRadius: SIZE_6,
-    borderTopStartRadius: SIZE_6,
-    borderTopLeftRadius: SIZE_6,
-    borderTopRightRadius: SIZE_6,
-  },
-  topLabel: {
-    width: SIZE_21,
-    height: 8 * StyleSheet.hairlineWidth,
-    borderRadius: 8 * StyleSheet.hairlineWidth,
-  },
-  topLabelContainer: {
-    height: SIZE_6,
-  },
-});

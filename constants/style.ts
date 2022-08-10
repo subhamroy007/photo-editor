@@ -3,7 +3,7 @@ import {
   COLOR_11,
   COLOR_12,
   COLOR_13,
-  COLOR_17,
+  COLOR_9,
   COLOR_7,
   COLOR_8,
   SIZE_12,
@@ -15,6 +15,9 @@ import {
   SIZE_7,
   SIZE_8,
   SIZE_9,
+  COLOR_6,
+  COLOR_5,
+  COLOR_19,
 } from "./constants";
 
 export const globalStyles = StyleSheet.create({
@@ -78,26 +81,50 @@ export const globalStyles = StyleSheet.create({
   primaryLightBackgroundColor: {
     backgroundColor: COLOR_8,
   },
+  primaryDarkBackgroundColor: {
+    backgroundColor: COLOR_7,
+  },
   primaryDarkForegroundColor: {
     backgroundColor: COLOR_7,
   },
   secondaryLightBackgroundColor: {
     backgroundColor: COLOR_13,
   },
+  secondaryDarkBackgroundColor: {
+    backgroundColor: COLOR_12,
+  },
   secondaryDarkForegroundColor: {
     backgroundColor: COLOR_12,
   },
-  primaryDarkBorderColor: {
-    borderColor: COLOR_17,
+  secondaryLightForegroundColor: {
+    backgroundColor: COLOR_13,
   },
-  defaultTopBorderWidth: {
+  primaryDarkBorderColor: {
+    borderColor: COLOR_5,
+  },
+  primaryLightBorderColor: {
+    borderColor: COLOR_19,
+  },
+  primaryTopBorderWidth: {
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  defaultBottomBorderWidth: {
+  primaryBottomBorderWidth: {
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  semitransparentBackgroundColor: {
+  secondaryTopBorderWidth: {
+    borderTopWidth: 2 * StyleSheet.hairlineWidth,
+  },
+  secondaryBottomBorderWidth: {
+    borderBottomWidth: 2 * StyleSheet.hairlineWidth,
+  },
+  semiTransparentBackgroundColor1: {
+    backgroundColor: COLOR_6,
+  },
+  semiTransparentBackgroundColor2: {
     backgroundColor: COLOR_11,
+  },
+  semiTransparentBackgroundColor3: {
+    backgroundColor: COLOR_9,
   },
   paddingHorizontalSize1: {
     paddingHorizontal: SIZE_7,
@@ -260,5 +287,13 @@ export const globalStyles = StyleSheet.create({
   },
   marginBottomSize9: {
     marginBottom: SIZE_12,
+  },
+  borderTopRadiusSize3: {
+    borderTopStartRadius: SIZE_5,
+    borderTopEndRadius: SIZE_5,
+  },
+  borderBottomRadiusSize3: {
+    borderBottomStartRadius: SIZE_5,
+    borderBottomEndRadius: SIZE_5,
   },
 });

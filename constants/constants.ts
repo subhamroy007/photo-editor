@@ -73,58 +73,66 @@ export const SIZE_34 = Math.round(SCREEN_WIDTH / 5); //72px for 360px
 
 export const SIZE_35 = Math.round(SCREEN_WIDTH * 1.5); //540px for 360px
 
+export const SIZE_36 = Math.round(SCREEN_WIDTH / 1.8); //200px for 360px
+
 export const DAY_IN_MILISECONDS = 3600 * 1000;
 
 export const COLOR_1 = "#3f71f2";
 export const COLOR_2 = "#ff4ed8";
 export const COLOR_3 = "#bc4eff";
 export const COLOR_4 = "#4eff5f";
-export const COLOR_5 = "#e1e1e1";
-export const COLOR_6 = "#909090";
-export const COLOR_7 = "black";
-export const COLOR_8 = "white";
-export const COLOR_9 = "#1f1f1f";
+export const COLOR_5 = "#6f6f6f"; //info foreground
+export const COLOR_6 = "rgba(0, 0, 0, 0.3)";
+export const COLOR_7 = "black"; //primary foreground
+export const COLOR_8 = "white"; //primary background
+export const COLOR_9 = "rgba(0, 0, 0, 0.8)";
 export const COLOR_10 = "#EE3434";
 export const COLOR_11 = "rgba(0, 0, 0, 0.5)";
-export const COLOR_12 = "#474747";
-export const COLOR_13 = "#ebebeb";
+export const COLOR_12 = "#474747"; //secondary foreground
+export const COLOR_13 = "#ebebeb"; //secondary background
 export const COLOR_14 = "red";
-export const COLOR_15 = "grey";
-export const COLOR_16 = "#1BE923";
-export const COLOR_17 = "#d1cbcb";
+export const COLOR_15 = "#1BE923";
+export const COLOR_19 = "#D7D7D7"; //info background
 
 export const IMAGE_POST_CONTENT_HEIGHT = Math.round(SCREEN_WIDTH * 1.25);
 export const SHORTS_POST_CONTENT_HEIGHT = Math.round(SCREEN_WIDTH * 1.4);
 export const VIDEO_POST_CONTENT_HEIGHT = SCREEN_WIDTH;
 
-export const NETWORK_ERROR_CODE = 1000;
-export const MEMORY_CLEAN_UP_ERROR_CODE = 2000;
-export const MEDIA_PLAYBACK_ERROR_CODE = 3000;
-
-export const SHUTTER_HEIGHT = SIZE_30;
 export const SHUTTER_ANIMATION_DURATION_MS = 200;
 export const TAB_BAR_HEIGHT = SIZE_21;
 
 export const MODAL_ANIMATION_DURATION_MS = 300;
 
-export const HEADER_HEIGHT = SIZE_20;
+export const HEADER_HEIGHT = SIZE_20 - SIZE_4;
 
 export const IMAGE_BLUR_RADIUS = 10;
 
 export const IMAGE_FADE_DURATION_MS = 800;
 
 export const DOUBLE_TAP_POPUP_ANIMATION_VELOCITY = 5;
-export const DOUBLE_TAP_POPUP_ANIMATION_DELAY = 800;
+export const DOUBLE_TAP_POPUP_ANIMATION_DELAY = 200;
 export const DOUBLE_TAP_POPUP_ANIMATION_END_DURATION = 200;
+
+export const FADE_ANIMATION_DURATION_MS = 300;
 
 export const LIST_MINIMUM_VIEW_TIME_MS = 200;
 
-export const IMAGE_ZOOM_RESET_DURATION_MS = 100;
+export const LIST_ITEM_ANIMATION_TIME_MS = 800;
+
+export const LAYOUT_ANIMATION_DURATION_MS = 300;
 
 export const LONG_PRESS_DURATION_MS = 200;
+
+export const DOUBLE_TAP_DURATION_MS = 400;
 
 export const ACCOUNT_LIST_ITEM_SIZE = SIZE_20 + 2 * SIZE_4;
 
 export const STORY_LIST_ITEM_SIZE = SIZE_34 + 2 * SIZE_4;
 
-export const ASYNC_STORAGE_APP_STATE_KEY = "APP_STATE";
+export const ASYNC_STORAGE_PROFILE_PICTURE_KEY = "profile-picture";
+export const ASYNC_STORAGE_USER_ID_KEY = "user-id";
+export const ASYNC_STORAGE_APP_THEME_KEY = "app-theme";
+export const ASYNC_STORAGE_API_ACCESS_TOKEN_KEY = "api-access-token";
+export const ASYNC_STORAGE_API_REFRESH_TOKEN_KEY = "api-refresh-token";
+
+export const SPRING_ANIMATION_DURAION_MS = 200;

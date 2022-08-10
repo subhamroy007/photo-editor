@@ -1,33 +1,26 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef } from "react";
 import {
+  Animated,
+  InteractionManager,
   Modal,
   Pressable,
-  StyleSheet,
-  TouchableHighlight,
   View,
 } from "react-native";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { selectAppTheme } from "../../api/global/appSelector";
 import {
-  COLOR_13,
-  SHUTTER_ANIMATION_DURATION_MS,
-  SIZE_5,
-  SIZE_6,
+  COLOR_19,
+  COLOR_5,
+  COLOR_7,
+  MODAL_ANIMATION_DURATION_MS,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 import { AppLabel } from "./AppLabel";
+import { AppPressable } from "./AppPressable";
 
 export type AppDialogBoxProps = {
   isVisible: boolean;
   onDismiss: () => void;
-  beforeOpen?: () => void;
-  afterOpen?: () => void;
-  beforeClose?: () => void;
-  afterClose?: () => void;
   title: string;
   options: {
     label: string;
@@ -43,162 +36,112 @@ export function AppDialogBox({
   title,
   info,
   onDismiss,
-  afterClose,
-  afterOpen,
-  beforeClose,
-  beforeOpen,
 }: AppDialogBoxProps) {
-  const animatedValue = useSharedValue(0);
+  const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
 
-  const [show, setShow] = useState(false);
+  const theme = useStoreSelector(selectAppTheme);
 
-  const reset = useCallback(() => {
-    setShow(false);
-    if (afterClose) {
-      afterClose();
-    }
-  }, [afterClose]);
+  const changeBoxState = useCallback((value: boolean) => {
+    Animated.timing(animatedValue, {
+      toValue: value ? 1 : 0,
+      useNativeDriver: true,
+      duration: MODAL_ANIMATION_DURATION_MS,
+      isInteraction: true,
+    }).start();
+  }, []);
 
-  const shiftShutter = useCallback(
-    (open: boolean = true) => {
-      animatedValue.value = withTiming(
-        open ? 1 : 0,
-        { duration: SHUTTER_ANIMATION_DURATION_MS },
-        () => {
-          if (open && afterOpen) {
-            runOnJS(afterOpen)();
-          } else if (!open) {
-            runOnJS(reset)();
-          }
-        }
-      );
-    },
-    [reset, afterOpen]
-  );
+  const onRequestClose = useCallback(() => {
+    changeBoxState(false);
+    InteractionManager.runAfterInteractions(onDismiss);
+  }, [onDismiss]);
 
-  const showHandler = useCallback(() => {
-    if (beforeOpen) {
-      beforeOpen();
-    }
-    shiftShutter(true);
-  }, [shiftShutter]);
-
-  const dismissHandler = useCallback(() => {
-    if (beforeClose) {
-      beforeClose();
-    }
-    shiftShutter(false);
-  }, [beforeClose, shiftShutter]);
-
-  useEffect(() => {
-    if (isVisible && !show) {
-      setShow(true);
-    } else if (!isVisible && show) {
-      dismissHandler();
-    }
-  }, [show, isVisible, dismissHandler]);
-
-  const animatedDialogBoxStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          scale: animatedValue.value,
-        },
-      ],
-    };
-  });
+  const onShow = useCallback(() => {
+    changeBoxState(true);
+  }, []);
 
   return (
     <Modal
       transparent
       statusBarTranslucent
-      onRequestClose={onDismiss}
-      onShow={showHandler}
-      visible={show}
-      animationType="fade"
+      visible={isVisible}
+      onShow={onShow}
+      onRequestClose={onRequestClose}
     >
-      <View
+      <Pressable
+        onPress={onRequestClose}
         style={[
+          globalStyles.flex1,
+          globalStyles.semiTransparentBackgroundColor2,
           globalStyles.justifyCenter,
           globalStyles.alignCenter,
-          globalStyles.flex1,
         ]}
       >
-        <Pressable
-          style={[
-            globalStyles.semitransparentBackgroundColor,
-            StyleSheet.absoluteFill,
-          ]}
-          onPress={onDismiss}
-          android_disableSound
-        />
         <Animated.View
           style={[
-            styles.borderRadius,
-            styles.dialogBox,
-            animatedDialogBoxStyle,
-            globalStyles.primaryLightBackgroundColor,
+            { maxWidth: "70%", transform: [{ scale: animatedValue }] },
+            theme === "light"
+              ? globalStyles.primaryLightBackgroundColor
+              : globalStyles.primaryDarkBackgroundColor,
+            ,
+            globalStyles.borderBottomRadiusSize3,
+            globalStyles.borderTopRadiusSize3,
           ]}
         >
-          <View>
+          <View
+            style={[
+              globalStyles.paddingVerticalSize4,
+              globalStyles.paddingHorizontalSize4,
+            ]}
+          >
             <AppLabel
               text={title}
               size="large"
               style="bold"
-              noOfLines={4}
               alignment="center"
-              gap="large"
+              gapVertical="large"
             />
             {info && (
               <AppLabel
                 text={info}
+                foreground={theme === "dark" ? COLOR_19 : COLOR_5}
                 style="regular"
                 alignment="center"
-                gap="large"
+                gapVertical="large"
                 noOfLines={4}
               />
             )}
           </View>
-
-          {options.map((option, index) => {
+          {options.map((item, index) => {
             return (
-              <TouchableHighlight
-                key={option.label}
-                onPress={option.onPress}
+              <AppPressable
+                type="underlay"
+                onPress={() => {
+                  onRequestClose();
+                  InteractionManager.runAfterInteractions(item.onPress);
+                }}
                 style={[
-                  globalStyles.defaultTopBorderWidth,
-                  globalStyles.primaryDarkBorderColor,
-                  {
-                    borderBottomEndRadius:
-                      index === options.length - 1 ? SIZE_5 : 0,
-                    borderBottomStartRadius:
-                      index === options.length - 1 ? SIZE_5 : 0,
-                  },
+                  globalStyles.primaryTopBorderWidth,
+                  theme === "dark"
+                    ? globalStyles.primaryLightBorderColor
+                    : globalStyles.primaryDarkBorderColor,
+                  index === options.length - 1
+                    ? globalStyles.borderBottomRadiusSize3
+                    : undefined,
                 ]}
-                underlayColor={COLOR_13}
-                activeOpacity={1.0}
+                key={item.label}
               >
                 <AppLabel
-                  size="medium"
+                  text={item.label}
                   style={index === 0 ? "medium" : "regular"}
-                  text={option.label}
-                  gap="large"
-                  foreground={option.color ? option.color : undefined}
+                  size="medium"
+                  gap="extra-large"
+                  foreground={item.color}
                 />
-              </TouchableHighlight>
+              </AppPressable>
             );
           })}
         </Animated.View>
-      </View>
+      </Pressable>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  borderRadius: {
-    borderRadius: SIZE_6,
-  },
-  dialogBox: {
-    maxWidth: "75%",
-  },
-});

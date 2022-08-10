@@ -1,13 +1,5 @@
-import { useCallback } from "react";
-import {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
+import { useCallback, useMemo, useRef } from "react";
+import { Animated, ViewStyle } from "react-native";
 import {
   DOUBLE_TAP_POPUP_ANIMATION_DELAY,
   DOUBLE_TAP_POPUP_ANIMATION_END_DURATION,
@@ -15,29 +7,43 @@ import {
 } from "../constants/constants";
 
 export function useScaleUpAnimation() {
-  const scaleUpAnimatedValue = useSharedValue(0);
+  const scaleUpAnimationValue = useRef<Animated.Value>(
+    new Animated.Value(0)
+  ).current;
 
   const startScaleUpAnimation = useCallback(() => {
-    cancelAnimation(scaleUpAnimatedValue);
-    scaleUpAnimatedValue.value = 0;
-    scaleUpAnimatedValue.value = withSequence(
-      withSpring(1, { velocity: DOUBLE_TAP_POPUP_ANIMATION_VELOCITY }),
-      withDelay(
-        DOUBLE_TAP_POPUP_ANIMATION_DELAY,
-        withTiming(0, { duration: DOUBLE_TAP_POPUP_ANIMATION_END_DURATION })
-      )
-    );
+    scaleUpAnimationValue.stopAnimation();
+    scaleUpAnimationValue.setValue(0);
+    Animated.sequence([
+      Animated.spring(scaleUpAnimationValue, {
+        toValue: 1,
+        useNativeDriver: true,
+        velocity: DOUBLE_TAP_POPUP_ANIMATION_VELOCITY,
+      }),
+      Animated.timing(scaleUpAnimationValue, {
+        toValue: 0,
+        useNativeDriver: true,
+        duration: DOUBLE_TAP_POPUP_ANIMATION_END_DURATION,
+        delay: DOUBLE_TAP_POPUP_ANIMATION_DELAY,
+      }),
+    ]).start();
   }, []);
 
-  const scaleUpAnimationStyle = useAnimatedStyle(() => {
+  const scaleUpAnimationStyle = useMemo<
+    Animated.WithAnimatedObject<ViewStyle>
+  >(() => {
     return {
-      transform: [{ scale: scaleUpAnimatedValue.value }],
-      opacity: scaleUpAnimatedValue.value,
+      transform: [
+        {
+          scale: scaleUpAnimationValue,
+        },
+      ],
+      opacity: scaleUpAnimationValue,
     };
-  });
+  }, []);
 
   return {
-    scaleUpAnimatedValue,
+    scaleUpAnimationValue,
     startScaleUpAnimation,
     scaleUpAnimationStyle,
   };

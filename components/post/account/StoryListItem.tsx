@@ -53,7 +53,7 @@ export const StoryListItem = React.memo<StoryListItemProps>(
             isAnimated={isStoryLoading}
           />
           <AppLabel
-            text={account.userId}
+            text={account.userid}
             style="regular"
             size="extra-small"
             styleProp={[{ maxWidth: SIZE_34 }, globalStyles.marginTopSize2]}

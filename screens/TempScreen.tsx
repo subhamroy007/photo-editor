@@ -1,29 +1,31 @@
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { AppLabel } from "../components/utility/AppLabel";
+import { AppModal } from "../components/utility/AppModal";
 import { globalStyles } from "../constants/style";
 import { useStatusBar } from "../hooks/useStatusBar";
-import { Image } from "react-native";
 
 export function TempScreen() {
+  // const [isVisible, setVisible] = useState(false);
+
   useStatusBar();
+
+  // const toggleVisibleState = useCallback(
+  //   () => setVisible((prevState) => !prevState),
+  //   []
+  // );
 
   return (
     <SafeAreaView
-      edges={["top"]}
+      edges={["bottom"]}
       style={[
         globalStyles.flex1,
         { backgroundColor: "white" },
-        globalStyles.stretchSelf,
-        globalStyles.justifyCenter,
-        globalStyles.alignCenter,
-        globalStyles.flexRow,
+        globalStyles.justifyEnd,
       ]}
-    >
-      <Image
-        source={require("../assets/icons/logo.png")}
-        resizeMode="cover"
-        style={{ width: 300, height: 300, backgroundColor: "red" }}
-        fadeDuration={0}
-      />
-    </SafeAreaView>
+    ></SafeAreaView>
   );
 }

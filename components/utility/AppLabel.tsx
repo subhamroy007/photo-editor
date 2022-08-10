@@ -1,11 +1,17 @@
 import { StyleSheet, Text } from "react-native";
+import { selectAppTheme } from "../../api/global/appSelector";
 import {
   COLOR_1,
+  COLOR_12,
+  COLOR_13,
+  COLOR_19,
+  COLOR_5,
   COLOR_7,
   COLOR_8,
   SIZE_10,
   SIZE_23,
   SIZE_25,
+  SIZE_3,
   SIZE_4,
   SIZE_5,
   SIZE_6,
@@ -13,6 +19,7 @@ import {
   SIZE_8,
 } from "../../constants/constants";
 import { AppLabelProps } from "../../constants/types";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 
 export function AppLabel({
   text,
@@ -24,14 +31,18 @@ export function AppLabel({
   foreground,
   styleProp,
   hasUnderline,
-  isBackgroundVisible,
-  isBorderVisible,
+  backgroundVisible,
+  borderVisible,
   noOfLines,
   onPress,
   alignment,
   gapHorizontal,
   gapVertical,
+  transparent,
+  type,
 }: AppLabelProps) {
+  const theme = useStoreSelector(selectAppTheme);
+
   let fontSize = 0;
   let fontFamily = "";
   let padding = 0;
@@ -39,11 +50,38 @@ export function AppLabel({
   let paddingVertical = 0;
   let borderRadius = 0;
   let backgroundColor = "";
-  let foregroundColor = foreground
-    ? foreground
-    : isBackgroundVisible
-    ? COLOR_8
-    : COLOR_7;
+  let foregroundColor = "";
+
+  if (backgroundVisible) {
+    if (background) {
+      backgroundColor = background;
+    } else {
+      if (!type || type === "primary") {
+        backgroundColor = COLOR_1;
+      } else if (type === "secondary") {
+        backgroundColor = theme === "dark" || transparent ? COLOR_12 : COLOR_13;
+      } else {
+        backgroundColor = theme === "dark" || transparent ? COLOR_5 : COLOR_19;
+      }
+    }
+  } else {
+    backgroundColor = "transparent";
+  }
+
+  if (foreground) {
+    foregroundColor = foreground;
+  } else {
+    if (!type || type === "primary") {
+      foregroundColor =
+        backgroundVisible || transparent || theme === "dark"
+          ? COLOR_8
+          : COLOR_7;
+    } else if (type === "secondary") {
+      foregroundColor = transparent || theme === "dark" ? COLOR_13 : COLOR_12;
+    } else {
+      foregroundColor = transparent || theme === "dark" ? COLOR_19 : COLOR_5;
+    }
+  }
 
   switch (size) {
     case "medium":
@@ -90,6 +128,9 @@ export function AppLabel({
     case "large":
       padding = SIZE_5;
       break;
+    case "extra-large":
+      padding = SIZE_3;
+      break;
     default:
       padding = 0;
   }
@@ -106,6 +147,9 @@ export function AppLabel({
       break;
     case "large":
       paddingHorizontal = SIZE_5;
+      break;
+    case "extra-large":
+      paddingHorizontal = SIZE_3;
       break;
     default:
       paddingHorizontal = 0;
@@ -124,6 +168,9 @@ export function AppLabel({
     case "large":
       paddingVertical = SIZE_5;
       break;
+    case "extra-large":
+      paddingVertical = SIZE_3;
+      break;
     default:
       paddingVertical = 0;
   }
@@ -139,12 +186,6 @@ export function AppLabel({
       borderRadius = 0;
   }
 
-  if (isBackgroundVisible) {
-    backgroundColor = background ? background : COLOR_1;
-  } else {
-    backgroundColor = "transparent";
-  }
-
   return (
     <Text
       onPress={onPress}
@@ -153,10 +194,10 @@ export function AppLabel({
           fontFamily,
           fontSize,
           textDecorationLine: hasUnderline ? "underline" : "none",
-          borderWidth: isBorderVisible ? 2 * StyleSheet.hairlineWidth : 0,
+          borderWidth: borderVisible ? 2 * StyleSheet.hairlineWidth : 0,
           backgroundColor,
           color: foregroundColor,
-          borderColor: isBackgroundVisible ? foregroundColor : undefined,
+          borderColor: foregroundColor,
           paddingVertical: gapVertical ? paddingVertical : undefined,
           paddingHorizontal: gapHorizontal ? paddingHorizontal : undefined,
           padding: gap ? padding : undefined,

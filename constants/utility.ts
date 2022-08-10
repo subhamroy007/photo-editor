@@ -325,7 +325,7 @@ export function getTimeElapsedString(timestamp: number) {
             const noOfMins = currentMins - targetMins;
             return noOfMins ? "1 min ago" : noOfMins + " mins ago";
           } else {
-            return "few seconds ago";
+            return "just now";
           }
         }
       }
@@ -384,4 +384,8 @@ export function getTextSections(text: string) {
   }
 
   return sections;
+}
+
+export async function delay(millis: number): Promise<unknown> {
+  return new Promise((resolve) => setTimeout(resolve, millis));
 }

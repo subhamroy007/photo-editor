@@ -1,134 +1,121 @@
-import React, { ReactElement, useCallback } from "react";
-import { StyleSheet, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated from "react-native-reanimated";
-import { COLOR_15, COLOR_7 } from "../../../constants/constants";
+import { useNavigation } from "@react-navigation/native";
+import React, { useCallback } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { shallowEqual } from "react-redux";
+import { selectAccountItem } from "../../../api/accounts/accountSelector";
+import { toggleAccountFollowing } from "../../../api/accounts/accountSlice";
+import {
+  selectAccountId,
+  selectAppTheme,
+} from "../../../api/global/appSelector";
+import { COLOR_19, COLOR_5, COLOR_8 } from "../../../constants/constants";
 import { globalStyles } from "../../../constants/style";
-import { AccountShortResponse } from "../../../constants/types";
+import { RootBotttomTabsNavigationProp } from "../../../constants/types";
+import { useStoreDispatch } from "../../../hooks/useStoreDispatch";
+import { useStoreSelector } from "../../../hooks/useStoreSelector";
 import { AppAvatar } from "../../utility/AppAvatar";
 import { AppLabel } from "../../utility/AppLabel";
-import { Tappable } from "../../utility/Tappable";
+import { AppPressable } from "../../utility/AppPressable";
 
 export type AccountListItemProps = {
-  account: AccountShortResponse;
-  disabled?: boolean;
-  onTap?: () => void;
-  onLongPress?: () => void;
-  onDoubleTap?: () => void;
-  LeftNode?: () => ReactElement;
+  userid: string;
+  transparent?: boolean;
 };
 
 export const AccountListItem = React.memo<AccountListItemProps>(
   (props) => {
-    const {
-      account: { hasUnseenStory, profilePictureUri, userId, username },
-      LeftNode,
-      disabled,
-      onDoubleTap,
-      onLongPress,
-      onTap,
-    } = props;
+    const { userid, transparent } = props;
 
-    const tapHandler = useCallback(() => {
-      if (onTap) {
-        onTap();
-      }
-    }, [onTap]);
+    const navigation = useNavigation<RootBotttomTabsNavigationProp>();
 
-    const doubleTapHandler = useCallback(() => {
-      if (onDoubleTap) {
-        onDoubleTap();
-      }
-    }, [onDoubleTap]);
-
-    const longPressHandler = useCallback(() => {
-      if (onLongPress) {
-        onLongPress();
-      }
-    }, [onLongPress]);
-
-    const tapGesture = Gesture.Tap()
-      .enabled(disabled === true ? false : true)
-      .onStart(tapHandler)
-      .maxDuration(400);
-
-    const doubleTapGesture = Gesture.Tap()
-      .enabled(disabled === true ? false : true)
-      .onStart(doubleTapHandler)
-      .numberOfTaps(2);
-
-    const longPressGesture = Gesture.LongPress()
-      .enabled(disabled === true ? false : true)
-      .onStart(longPressHandler)
-      .minDuration(400);
-
-    const compositeGesture = Gesture.Exclusive(
-      doubleTapGesture,
-      tapGesture,
-      longPressGesture
+    const getAccount = useCallback(
+      (state) => selectAccountItem(state, userid),
+      [userid]
     );
+
+    const theme = useStoreSelector(selectAppTheme);
+
+    const account = useStoreSelector(getAccount, shallowEqual);
+
+    const defaultUserid = useStoreSelector(selectAccountId);
+
+    const dispatch = useStoreDispatch();
+
+    const onFollowButtonPress = useCallback(() => {
+      dispatch(toggleAccountFollowing(userid));
+    }, [userid, dispatch]);
+
+    const gotoAccount = useCallback(() => {
+      navigation.push("BottomTabs", {
+        screen: "UtilityStacks",
+        params: { screen: "Profile", params: { userid } },
+      });
+    }, [navigation, userid]);
+
+    const onAvatarPress = useCallback(() => {
+      console.log("avatar pressed");
+    }, []);
 
     return (
-      <GestureDetector gesture={compositeGesture}>
-        <Animated.View
-          style={[globalStyles.justifyBetween, globalStyles.flexRow]}
+      <AppPressable
+        onPress={gotoAccount}
+        style={[
+          globalStyles.flexRow,
+          globalStyles.paddingVerticalSize2,
+          globalStyles.paddingHorizontalSize4,
+          globalStyles.alignCenter,
+        ]}
+      >
+        <Pressable android_disableSound onPress={onAvatarPress}>
+          <AppAvatar
+            image={account.profilePicture}
+            isActive={true}
+            hasRing={account.hasUnSeenStory}
+            size="large"
+            transparent={transparent}
+          />
+        </Pressable>
+        <View
+          style={[
+            globalStyles.flex2,
+            globalStyles.alignStart,
+            globalStyles.marginLeftSize4,
+          ]}
         >
-          <View
-            style={[
-              globalStyles.flexRow,
-              globalStyles.alignCenter,
-              globalStyles.paddingHorizontalSize4,
-              globalStyles.paddingVerticalSize2,
-              globalStyles.flex2,
-            ]}
+          <AppLabel
+            text={account.userid}
+            alignment="left"
+            transparent={transparent}
+          />
+          <AppLabel
+            text={account.username}
+            type="info"
+            transparent={transparent}
+            alignment="left"
+            styleProp={globalStyles.marginTopSize2}
+          />
+        </View>
+        {defaultUserid !== account.userid && (
+          <AppPressable
+            style={[globalStyles.marginLeftSize4, globalStyles.flex1]}
+            onPress={onFollowButtonPress}
           >
-            <Tappable disabled={disabled} onTap={onLongPress}>
-              <AppAvatar
-                uri={profilePictureUri}
-                hasRing={hasUnseenStory && disabled !== true}
-                isActive={hasUnseenStory}
-                size="large"
-              />
-            </Tappable>
-            <View
-              style={[
-                globalStyles.marginLeftSize4,
-                globalStyles.alignStart,
-                globalStyles.flex1,
-              ]}
-            >
-              <AppLabel
-                text={userId}
-                foreground={COLOR_7}
-                styleProp={styles.label}
-              />
-              <AppLabel
-                text={username}
-                foreground={COLOR_15}
-                styleProp={[globalStyles.marginTopSize2, styles.label]}
-              />
-            </View>
-          </View>
-
-          {LeftNode && (
-            <View
-              style={[
-                globalStyles.flexRow,
-                globalStyles.alignCenter,
-                globalStyles.paddingHorizontalSize4,
-                globalStyles.paddingVerticalSize4,
-                globalStyles.flex1,
-              ]}
-            >
-              <LeftNode />
-            </View>
-          )}
-        </Animated.View>
-      </GestureDetector>
+            <AppLabel
+              text={account.isFollowing ? "following" : "follow"}
+              backgroundVisible={!account.isFollowing}
+              borderVisible={account.isFollowing}
+              style="bold"
+              gapVertical="medium"
+              corner="small-round"
+              transparent={transparent}
+            />
+          </AppPressable>
+        )}
+      </AppPressable>
     );
   },
-  () => {
-    return false;
+  ({ transparent: prevTransparent }, { transparent: nextTransparent }) => {
+    return prevTransparent === nextTransparent;
   }
 );
 

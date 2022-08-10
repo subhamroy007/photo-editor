@@ -1,13 +1,11 @@
-import { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import {
-  RootMaterialTopTabNavigatorParams,
-  RootStackNavigatorParams,
-} from "../constants/types";
-import { Comments } from "../screens/root-stacks/Comments";
+import { RootStackNavigatorParams } from "../constants/types";
+import { Chat } from "../screens/root-stacks/Chat";
+import { CreateContent } from "../screens/root-stacks/CreateContent";
 import { TempScreen } from "../screens/TempScreen";
+import { CloseToMe } from "../screens/root-stacks/CloseToMe";
 import { RootBottomTabNavigatior } from "./RootBottomTabNavigator";
-import { RootMaterialTopTabNavigator } from "./RootMaterialTopTabNavigator";
+import { LikesScreen } from "../screens/root-stacks/LikesScreen";
 
 const Tab = createNativeStackNavigator<RootStackNavigatorParams>();
 
@@ -17,19 +15,17 @@ export function RootStackNavigator() {
       id="root-stack-navigator"
       screenOptions={{
         gestureEnabled: false,
-        customAnimationOnGesture: false,
-        fullScreenGestureEnabled: false,
         headerShown: false,
         headerTransparent: true,
-        animation: "slide_from_bottom",
+        animation: "slide_from_left",
       }}
-      initialRouteName="MaterialTopTabs"
+      initialRouteName="BottomTabs"
     >
       <Tab.Screen
-        name="MaterialTopTabs"
-        component={RootMaterialTopTabNavigator}
-        getId={() => "root-material-top-tab-navigator"}
-        navigationKey="root-material-top-tab-navigator"
+        name="BottomTabs"
+        component={RootBottomTabNavigatior}
+        getId={() => "root-bottom-tab-navigator"}
+        navigationKey="root-bottom-tab-navigator"
       />
       <Tab.Screen
         name="TempScreen"
@@ -37,10 +33,29 @@ export function RootStackNavigator() {
         navigationKey="temp-screen"
       />
       <Tab.Screen
-        name="Comments"
-        component={Comments}
-        navigationKey="comments"
-        getId={() => "comments"}
+        name="Chat"
+        component={Chat}
+        navigationKey="chat"
+        getId={() => "chat"}
+      />
+      <Tab.Screen
+        name="CreateContent"
+        component={CreateContent}
+        navigationKey="create-content"
+        getId={() => "create-content"}
+      />
+      <Tab.Screen
+        name="CloseToMe"
+        component={CloseToMe}
+        navigationKey="close-to-me"
+        getId={() => "close-to-me"}
+      />
+      <Tab.Screen
+        name="LikesScreen"
+        component={LikesScreen}
+        navigationKey="likes"
+        getId={() => "likes"}
+        options={{ presentation: "transparentModal" }}
       />
     </Tab.Navigator>
   );

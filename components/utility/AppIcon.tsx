@@ -5,6 +5,10 @@ import { createIconSetFromFontello } from "@expo/vector-icons";
 import fontelloConfig from "../../font.config.json";
 import {
   COLOR_1,
+  COLOR_12,
+  COLOR_13,
+  COLOR_19,
+  COLOR_5,
   COLOR_7,
   COLOR_8,
   SIZE_10,
@@ -15,6 +19,8 @@ import {
   SIZE_6,
   SIZE_9,
 } from "../../constants/constants";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
+import { selectAppTheme } from "../../api/global/appSelector";
 const Icon = createIconSetFromFontello(fontelloConfig, "icons", "icons");
 
 export function AppIcon({
@@ -23,19 +29,50 @@ export function AppIcon({
   background,
   foreground,
   styleProp,
-  isBackgroundVisible,
-  isBorderVisible,
+  backgroundVisible,
+  borderVisible,
   onPress,
   gap,
+  transparent,
+  type,
 }: AppIconProps) {
+  const theme = useStoreSelector(selectAppTheme);
+
   let iconSize = 0;
   let containerSize = 0;
   let backgroundColor = "";
-  let foregroundColor = foreground
-    ? foreground
-    : isBackgroundVisible
-    ? COLOR_8
-    : COLOR_7;
+  let foregroundColor = "";
+
+  if (backgroundVisible) {
+    if (background) {
+      backgroundColor = background;
+    } else {
+      if (!type || type === "primary") {
+        backgroundColor = COLOR_1;
+      } else if (type === "secondary") {
+        backgroundColor = theme === "dark" || transparent ? COLOR_12 : COLOR_13;
+      } else {
+        backgroundColor = theme === "dark" || transparent ? COLOR_5 : COLOR_19;
+      }
+    }
+  } else {
+    backgroundColor = "transparent";
+  }
+
+  if (foreground) {
+    foregroundColor = foreground;
+  } else {
+    if (!type || type === "primary") {
+      foregroundColor =
+        backgroundVisible || transparent || theme === "dark"
+          ? COLOR_8
+          : COLOR_7;
+    } else if (type === "secondary") {
+      foregroundColor = transparent || theme === "dark" ? COLOR_13 : COLOR_12;
+    } else {
+      foregroundColor = transparent || theme === "dark" ? COLOR_19 : COLOR_5;
+    }
+  }
 
   switch (size) {
     case "small":
@@ -72,12 +109,6 @@ export function AppIcon({
       break;
   }
 
-  if (isBackgroundVisible) {
-    backgroundColor = background ? background : COLOR_1;
-  } else {
-    backgroundColor = "transparent";
-  }
-
   return (
     <Icon
       name={name}
@@ -86,20 +117,16 @@ export function AppIcon({
       style={[
         styleProp,
         {
-          borderWidth: isBorderVisible
-            ? 2 * StyleSheet.hairlineWidth
-            : undefined,
+          borderWidth: borderVisible ? 2 * StyleSheet.hairlineWidth : undefined,
           backgroundColor: backgroundColor,
           color: foregroundColor,
-          borderColor: isBorderVisible ? foregroundColor : undefined,
+          borderColor: foregroundColor,
           borderRadius:
-            isBackgroundVisible || isBorderVisible ? containerSize / 2 : 0,
-          width:
-            isBackgroundVisible || isBorderVisible ? containerSize : iconSize,
-          height:
-            isBackgroundVisible || isBorderVisible ? containerSize : iconSize,
+            backgroundVisible || borderVisible ? containerSize / 2 : 0,
+          width: backgroundVisible || borderVisible ? containerSize : iconSize,
+          height: backgroundVisible || borderVisible ? containerSize : iconSize,
           padding:
-            isBackgroundVisible || isBorderVisible
+            backgroundVisible || borderVisible
               ? (containerSize - iconSize) / 2
               : 0,
         },

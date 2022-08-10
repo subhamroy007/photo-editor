@@ -1,49 +1,52 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export type AppSliceState = {
-  cache: {
-    isMuted: boolean;
-  };
-  info: {
-    profilePicture: string;
-    lastLoginTimestamp: number;
-    lastActiveTimstamp: number;
-    accessToken: string;
-    refreshToken: string;
-    userId: string;
-  };
-};
+import {
+  AppSliceState,
+  AppThemeTypes,
+  MediaParams,
+} from "../../constants/types";
 
 const appSlice = createSlice({
   name: "appSlice",
-  initialState: {
-    cache: {
-      isMuted: false,
-    },
-    info: {
-      accessToken: "",
-      lastActiveTimstamp: 0,
-      lastLoginTimestamp: 0,
-      profilePicture: "",
-      refreshToken: "",
-      userId: "",
-    },
-  } as AppSliceState,
+  initialState: {} as AppSliceState,
   reducers: {
-    changeProfilePicture: (state, action: PayloadAction<string>) => {
-      state.info.profilePicture = action.payload;
+    changeProfilePicture: (state, action: PayloadAction<MediaParams>) => {
+      state.profilePicture = action.payload;
     },
-    initAppState: (state, action: PayloadAction<AppSliceState["info"]>) => {
-      state.cache = { isMuted: true };
-      state.info = action.payload;
+    initAppState: (state, { payload }: PayloadAction<AppSliceState>) => {
+      state.accessToken = payload.accessToken;
+      state.defaultProfilePicture = payload.defaultProfilePicture;
+      state.isMuted = payload.isMuted;
+      state.logo = payload.logo;
+      state.profilePicture = payload.profilePicture;
+      state.refreshToken = state.refreshToken;
+      state.userid = state.userid;
+      state.isFullScreenActive = state.isFullScreenActive;
+      state.isSystemTheme = state.isSystemTheme;
+      state.theme = payload.theme;
     },
-    changeLastActiveTimeStamp: (state, action: PayloadAction<number>) => {
-      state.info.lastActiveTimstamp = action.payload;
+    toggleMuteState: (state) => {
+      state.isMuted = !state.isMuted;
+    },
+    activateFullScreen: (state) => {
+      state.isFullScreenActive = true;
+    },
+    deActivateFullScreen: (state) => {
+      state.isFullScreenActive = false;
+    },
+    changeTheme: (state, { payload }: PayloadAction<AppThemeTypes>) => {
+      state.theme = payload;
     },
   },
 });
 
 export const {
-  actions: { changeLastActiveTimeStamp, changeProfilePicture, initAppState },
+  actions: {
+    changeProfilePicture,
+    initAppState,
+    toggleMuteState,
+    activateFullScreen,
+    deActivateFullScreen,
+    changeTheme,
+  },
   reducer: appReducer,
 } = appSlice;

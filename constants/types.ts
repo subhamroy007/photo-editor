@@ -1,4 +1,5 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { ReactNode } from "react";
 import { StyleProp, TextStyle, ViewStyle } from "react-native";
 import { ResizeMode } from "react-native-fast-image";
@@ -9,45 +10,6 @@ import {
   TextureMinFilter,
   TextureWrapType,
 } from "../utility/webgl/Texture";
-
-export interface PhotoRenderConfig {
-  width: number;
-  height: number;
-  resizeMode: ResizeMode;
-}
-
-export interface PhotoAlbum {
-  title: string;
-  count: number;
-  endCursor: number;
-  hasNextPage: boolean;
-  photos: string[];
-}
-
-export interface Photo {
-  uri: string;
-  timestamp: number;
-  width: number;
-  height: number;
-  isSelected: boolean;
-}
-
-export interface PhotoSelectScreenState {
-  albums: {
-    [key: string]: PhotoAlbum | null;
-  };
-  photos: {
-    [key: string]: Photo | null;
-  };
-  selectedAlbumTitle: string;
-  selectedPhotos: string[];
-}
-
-export interface PhotoFetchResult {
-  photos: Photo[];
-  endCursor: number;
-  hasNextPage: boolean;
-}
 
 export type IconName =
   | "chevron-left"
@@ -260,85 +222,25 @@ export interface TransitionProperty {
 
 export type EffectPlaceHolder = "$SCREEN_WIDTH" | "$SCREEN_HEIGHT";
 
-export interface MediaOptions {
-  name: string;
-  localUri: string;
-  width: number;
-  height: number;
-  duration: number;
-  frame: number;
-  type: "photo" | "video";
-}
-
-export interface MediaState {
-  loaded: boolean;
-  error: boolean;
-  mediaMap: {
-    [key: string]: MediaOptions;
-  };
-}
-
-export interface EffectInfo {
-  id: string;
-  name: string;
-  avatarUri: string;
-}
-
-export interface MusicInfo {
-  id: string;
-  title: string;
-  artist: string;
-  noOfVideos: number;
-  uri: string;
-  isBookmarked: boolean;
-  posterUri: string;
-  duration: number;
-}
-
-export type EffectTabProps = {
-  onEffectSelect: (id: string) => void;
-} & SceneRendererProps;
-
-export type MusicTabProps = MusicTabParams & SceneRendererProps;
-
-export type MusicTabParams = {
-  onMusicSelect: (music: MusicInfo) => void;
-};
-
-export interface EffectTabState {
-  effects: EffectInfo[];
-  isLoading: boolean;
-  hasError: boolean;
-}
-
-export type ContentType = "PHOTO" | "VIDEO" | "STORY" | "SHORTS";
-
-export type Resolution = {
-  width: number;
-  height: number;
-};
-
-export type ImageContainerConfig = {
-  resizeMode: "cover" | "contain" | "center";
-} & Resolution;
-
 export type AppLabelProps = {
   text: string;
   size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
   style?: "medium" | "bold" | "regular";
-  gap?: "extra-small" | "small" | "large" | "medium";
-  gapHorizontal?: "extra-small" | "small" | "large" | "medium";
-  gapVertical?: "extra-small" | "small" | "large" | "medium";
+  gap?: "extra-small" | "small" | "large" | "medium" | "extra-large";
+  gapHorizontal?: "extra-small" | "small" | "large" | "medium" | "extra-large";
+  gapVertical?: "extra-small" | "small" | "large" | "medium" | "extra-large";
   corner?: "small-round" | "large-round";
   alignment?: "left" | "right" | "center";
   background?: string;
   foreground?: string;
   styleProp?: StyleProp<TextStyle>;
   hasUnderline?: boolean;
-  isBackgroundVisible?: boolean;
-  isBorderVisible?: boolean;
+  backgroundVisible?: boolean;
+  borderVisible?: boolean;
   noOfLines?: number;
   onPress?: () => void;
+  transparent?: boolean;
+  type?: "primary" | "secondary" | "info";
 };
 
 export type AppIconProps = {
@@ -348,22 +250,18 @@ export type AppIconProps = {
   background?: string;
   foreground?: string;
   styleProp?: StyleProp<TextStyle>;
-  isBackgroundVisible?: boolean;
-  isBorderVisible?: boolean;
+  backgroundVisible?: boolean;
+  borderVisible?: boolean;
   onPress?: () => void;
-};
-
-export type ImageParams = {
-  uri: string;
-  width: number;
-  height: number;
+  transparent?: boolean;
+  type?: "primary" | "secondary" | "info";
 };
 
 export type VideoParams = {
   duration: number;
-  thumbnail: ImageParams;
-  preview: { duration: number } & ImageParams;
-} & ImageParams;
+  thumbnail: MediaParams;
+  preview: { duration: number } & MaterialParams;
+} & MediaParams;
 
 export type LocalMediaParams = {
   timestamp: number;
@@ -379,72 +277,196 @@ export type LocalMediaHookState = {
   hasWritePermission: boolean;
 };
 
-export type AccountShortResponse = {
+export type StoryResponse = {
   id: string;
-  userId: string;
-  username: string;
-  isFollower: boolean;
-  isFollowing: boolean;
-  hasUnseenStory: boolean;
-  profilePictureUri: string;
+  hasSeen: boolean;
+  media: MediaParams;
 };
 
-export type LocationShortResponse = {
+export type ReplyResponse = {
   id: string;
-  name: string;
-  title: string;
+  author: AccountResponse;
+  timestamp: number;
+  content: string;
+  noOfLikes: number;
+  isLiked: boolean;
 };
 
 export type CommentResponse = {
-  id: string;
-  content: string;
-  author: AccountShortResponse;
-  timestamp: number;
-  hasLiked: boolean;
-  noOkLikes: number;
   noOfReplies: number;
+  replies: ReplyResponse[];
+} & ReplyResponse;
+
+export type ReplyGlobalParams = {
+  id: string;
+  author: string;
+  timestamp: number;
+  content: string;
+  noOfLikes: number;
+  isLiked: boolean;
 };
 
-export type AudioShortResponse = {
+export type CommentGlobalParams = {
+  noOfReplies: number;
+  replies: ReplyResponse[];
+} & ReplyGlobalParams;
+
+export type PostCategory = "food" | "entertainment" | "music" | "others";
+
+export type PostType = "photo" | "video" | "moment";
+
+export type HashtagResponse = {
+  id: string;
+  name: string;
+  noOfPosts: number;
+};
+
+export type AccountResponse = {
+  id: string;
+  userid: string;
+  username: string;
+  isFollowing: boolean;
+  isFavourite: boolean;
+  hasNewStory: boolean;
+  noOfFollowers: number;
+  profilePicture: {
+    original: MediaParams;
+    preview: MediaParams;
+    previewEncoded: string;
+  } | null;
+  stories: StoryResponse[];
+};
+
+export type LocationResponse = {
+  id: string;
+  name: string;
+  noOfPosts: number;
+};
+
+export type AudioResponse = {
   id: string;
   title: string;
   artist: string;
   startFrom: number;
-  isAvailable: boolean;
   isSaved: boolean;
   uri: string;
-  poster: string;
+  poster: MediaParams;
   duration: number;
+  isAvailable: boolean;
+  noOfVideos: number;
 };
 
-export type EffectShortResponse = {
+export type FilterResponse = {
   id: string;
-  poster: string;
-  title: string;
+  name: string;
   isSaved: boolean;
+  poster: MediaParams;
+  noOfVideos: number;
 };
 
 export type PostResponse = {
-  type: "photo" | "video" | "shorts";
   id: string;
-  author: AccountShortResponse;
-  media: MediaParams[];
-  audio: AudioShortResponse | null;
-  poster: string;
-  duration: number;
+  type: PostType;
+  category: PostCategory;
+  author: AccountResponse;
+  preview: MediaParams;
+  previewEncoded: string;
   caption: string;
-  title: string;
-  taggedLocation: LocationShortResponse | null;
-  taggedAccounts: AccountShortResponse[];
-  effect: EffectShortResponse | null;
+  location: LocationResponse | null;
+  accounts: AccountResponse[];
   timestamp: number;
   isSaved: boolean;
   isLiked: boolean;
-  isWatched: boolean;
   noOfLikes: number;
   noOfViews: number;
   noOfComments: number;
-  topLikes: AccountShortResponse[];
+  likes: AccountResponse[];
+  comments: CommentResponse[];
+  photo: {
+    photos: MediaParams[];
+  } | null;
+  video: {
+    video: MediaParams;
+    duration: number;
+    title: string;
+  } | null;
+  moment: {
+    video: MediaParams;
+    audio: AudioResponse | null;
+    filter: FilterResponse | null;
+  } | null;
+};
+
+export type PostGlobalParams = {
+  id: string;
+  type: PostType;
+  category: PostCategory;
+  author: string;
+  preview: MediaParams;
+  previewEncoded: string;
+  caption: string;
+  location: LocationResponse | null;
+  accounts: string[];
+  timestamp: number;
+  isSaved: boolean;
+  isLiked: boolean;
+  noOfLikes: number;
+  noOfViews: number;
+  noOfComments: number;
+  likes: string[];
+  comments: CommentGlobalParams[];
+  photo: {
+    photos: MediaParams[];
+  } | null;
+  video: {
+    video: MediaParams;
+    duration: number;
+    title: string;
+  } | null;
+  moment: {
+    video: MediaParams;
+    audio: string;
+    filter: string;
+  } | null;
+};
+
+export type PostItemParams = {
+  id: string;
+  type: PostType;
+  category: PostCategory;
+  author: {
+    userid: string;
+    profilePicture: MediaParams;
+    showStoryIndicator: boolean;
+    isFollowing: boolean;
+    isFavourite: boolean;
+    id: string;
+  };
+  previewEncoded: string;
+  caption: string;
+  location: string;
+  accounts: string | number;
+  timestamp: number;
+  isSaved: boolean;
+  isLiked: boolean;
+  noOfLikes: number;
+  noOfViews: number;
+  noOfComments: number;
+  likes: { profilePicture: MediaParams; userid: string }[];
+  comments: { id: string; content: string; author: string }[];
+  photo: {
+    photos: MediaParams[];
+  } | null;
+  video: {
+    video: MediaParams;
+    duration: number;
+    title: string;
+  } | null;
+  moment: {
+    video: MediaParams;
+    audio: { id: string; title: string; poster: MediaParams } | null;
+    filter: { id: string; name: string } | null;
+  } | null;
 };
 
 export type MediaParams = {
@@ -462,113 +484,13 @@ export type AppErrorParams = {
 };
 
 export type PostItemProps = {
-  post: PostResponse;
-  onAuthorFollowButtonPress: () => void;
-  onAuthorAvatarPress: () => void;
-  onMoreIconPress: () => void;
-  onLikeIconPress: (value?: boolean) => void;
-  onCommentIconPress: () => void;
-  onShareIconPress: () => void;
-  onTagIconPress: () => void;
-  onLikeCountPress: () => void;
-  onLocationLabelPress: () => void;
-  onAudioLabelPress: () => void;
-  onEffectLabelPress: () => void;
-  onHashtagPress: (hashtag: string) => void;
-  onAccountIdPress: (userId: string) => void;
-  onCaptionPress: () => void;
-  isCaptionExpanded: boolean;
-  notify: (notification: string) => void;
-  showFollowButton: boolean;
-  isVisible: boolean;
-  isStoryLoading: boolean;
-  isMuted: boolean;
-  toggleMuteState: () => void;
-  toggleFullScreen: () => void;
-  isFullScreen: boolean;
-  width: number;
-};
-
-export type FeedPostProps = {
-  post: PostResponse;
-  onAuthorFollowButtonPress: (index: number) => void;
-  onAuthorAvatarPress: (index: number) => void;
-  onMoreIconPress: (index: number) => void;
-  onLikeIconPress: (index: number, value?: boolean) => void;
-  onCommentIconPress: (index: number) => void;
-  onShareIconPress: (index: number) => void;
-  onBookmarkIconPress: (index: number) => void;
-  onTagIconPress: (index: number) => void;
-  onLikeCountPress: (index: number) => void;
-  onLocationLabelPress: (locationId: string) => void;
-  onAudioLabelPress: (audioId: string) => void;
-  onEffectLabelPress: (effectId: string) => void;
-  onHashtagPress: (hashtag: string) => void;
-  onAccountIdPress: (userId: string) => void;
-  notify: (notification: string) => void;
-  showFollowButton: boolean;
-  isVisible: boolean;
-  index: number;
-  width: number;
-  isStoryLoading: boolean;
-};
-
-export type FeedVideoPostProps = {
-  isMuted: boolean;
-  toggleMuteState: () => void;
-} & FeedPostProps;
-
-export type FeedShortsPostProps = {
-  isMuted: boolean;
-  toggleMuteState: () => void;
-} & FeedPostProps;
-
-export type FeedPostTemplateProps = {
-  height: number;
-  children: ReactNode;
-  loadAsync: () => Promise<void>;
-  onLoad: () => void;
-} & FeedPostProps;
-
-export type FullScreenPostProps = {
-  height: number;
-  toggleFullScreen: (orientation: "landscape" | "portrait") => void;
-  isFullScreen: boolean;
-} & FeedPostProps;
-
-export type FullScreenImagePostProps = {
-  initialIndex: number;
-} & FullScreenPostProps;
-
-export type FullScreenShortsPostProps = {
-  startFrom: number;
-  isMuted: boolean;
-  toggleMuteState: () => void;
-} & FullScreenPostProps;
-
-export type FullScreenVideoPostProps = {
-  startFrom: number;
-  isMuted: boolean;
-
-  toggleMuteState: () => void;
-} & FullScreenPostProps;
-
-export type FullScreenPostTemplateProps = {
-  hideDetails: boolean;
-  externalGesture: ComposedGesture;
-  loadMedia: () => Promise<void>;
-  onLoad: () => void;
-  height: number;
-  children: ReactNode;
-  isReady: boolean;
-  topNode: ReactNode;
-} & FullScreenPostProps;
-
-export type MediaLoadingIndicatorProps = {
-  loadMedia: () => Promise<void>;
-  onLoad: () => void;
-  onError: (error: AppErrorParams) => void;
-  posterUri: string;
+  postId: string;
+  isItemFocused: boolean;
+  openMoreOptionModal: (postId: string) => void;
+  openCommentsShutter: (postId: string) => void;
+  openLikesShutter: (postId: string) => void;
+  openTagsShuttrer: (postId: string) => void;
+  openShareShutter: (postId: string) => void;
 };
 
 export type MediaLoadingComponentProps = {
@@ -578,33 +500,13 @@ export type MediaLoadingComponentProps = {
   onRetry: () => void;
 };
 
-export type AppImageProps = {
-  image: MediaParams;
-  width: number;
-  height: number;
-  zoom?: boolean;
-  onZoomReset?: () => void;
-};
-
-export type AppImageListProps = {
-  images: MediaParams[];
-  onImageIndexChange: (index: number) => void;
-  imageIndex: number;
-  width: number;
-  height: number;
-  zoom?: boolean;
-};
-
 //navigator param types
 export type UtilityStackNavigatorParams = {
   Profile: {
-    userId: string;
+    userid: string;
   };
   Hashtag: {
     hashtag: string;
-  };
-  PostLikes: {
-    postId: string;
   };
   Location: {
     locationId: string;
@@ -617,7 +519,6 @@ export type UtilityStackNavigatorParams = {
   };
   Settings: undefined;
   Saved: undefined;
-  CloseToMe: undefined;
   Favourites: undefined;
 };
 
@@ -630,16 +531,34 @@ export type RootBottomTabNavigatorParams = {
   Account: undefined;
 };
 
-export type RootMaterialTopTabNavigatorParams = {
+export type RootStackNavigatorParams = {
   BottomTabs: NavigatorScreenParams<RootBottomTabNavigatorParams>;
+  TempScreen: undefined;
   CreateContent: undefined;
   Chat: undefined;
-};
-
-export type RootStackNavigatorParams = {
-  MaterialTopTabs: NavigatorScreenParams<RootMaterialTopTabNavigatorParams>;
-  TempScreen: undefined;
-  Comments: {
-    postId: string;
+  CloseToMe: undefined;
+  LikesScreen: {
+    id: string;
+    type: "post" | "comment" | "reply";
   };
 };
+
+export type AppThemeTypes = "light" | "dark";
+
+export type AppSliceState = {
+  isMuted: boolean;
+  defaultProfilePicture: MediaParams;
+  profilePicture: MediaParams;
+  logo: MediaParams;
+  isFullScreenActive: boolean;
+  theme: AppThemeTypes;
+  isSystemTheme: boolean;
+  userid: string;
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type RootBotttomTabsNavigationProp = NativeStackNavigationProp<
+  RootStackNavigatorParams,
+  "BottomTabs"
+>;

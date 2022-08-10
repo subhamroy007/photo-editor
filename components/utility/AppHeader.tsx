@@ -7,14 +7,15 @@ import {
   ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { HEADER_HEIGHT } from "../../constants/constants";
+import { selectAppTheme } from "../../api/global/appSelector";
+import { COLOR_8, HEADER_HEIGHT } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { IconName } from "../../constants/types";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 import { AppIcon } from "./AppIcon";
 import { AppLabel } from "./AppLabel";
 
 export type AppHeader = {
-  transparent?: boolean;
   style?: StyleProp<ViewStyle>;
   LeftNode?: () => ReactElement;
   RightNode?: () => ReactElement;
@@ -24,10 +25,10 @@ export type AppHeader = {
   title?: string;
   onLeftIconPress?: () => void;
   onRightIconPress?: () => void;
+  transparent?: boolean;
 };
 
 export function AppHeader({
-  transparent,
   style,
   title,
   leftIcon,
@@ -37,61 +38,60 @@ export function AppHeader({
   TitleNode,
   onLeftIconPress,
   onRightIconPress,
+  transparent,
 }: AppHeader) {
+  const theme = useStoreSelector(selectAppTheme);
+
   return (
     <SafeAreaView
       edges={["top", "left", "right"]}
-      style={[globalStyles.absolutePosition, styles.headerContainer, style]}
+      style={[
+        styles.headerWrapper,
+        transparent
+          ? undefined
+          : theme === "light"
+          ? globalStyles.primaryLightBackgroundColor
+          : globalStyles.primaryDarkBackgroundColor,
+        globalStyles.absolutePosition,
+        style,
+      ]}
     >
       <View
         style={[
           globalStyles.flexRow,
           styles.header,
-          transparent ? undefined : globalStyles.primaryLightBackgroundColor,
+          globalStyles.paddingHorizontalSize4,
+          globalStyles.alignCenter,
         ]}
       >
         {leftIcon && (
-          <Pressable
-            style={[
-              globalStyles.alignCenter,
-              globalStyles.flexRow,
-              globalStyles.paddingHorizontalSize4,
-            ]}
-            android_disableSound
-            onPress={onLeftIconPress}
-          >
-            <AppIcon name={leftIcon} />
+          <Pressable android_disableSound onPress={onLeftIconPress}>
+            <AppIcon
+              name={leftIcon}
+              foreground={transparent ? COLOR_8 : undefined}
+            />
           </Pressable>
         )}
         {LeftNode && (
-          <View
-            style={[globalStyles.paddingHorizontalSize4, globalStyles.flexRow]}
-          >
+          <View style={[globalStyles.flexRow]}>
             <LeftNode />
           </View>
         )}
         {title && (
-          <View
-            style={[
-              globalStyles.flex1,
-              globalStyles.alignCenter,
-              globalStyles.paddingHorizontalSize4,
-              globalStyles.flexRow,
-            ]}
-          >
-            <AppLabel
-              text={title}
-              size="large"
-              style="bold"
-              styleProp={{ maxWidth: "100%" }}
-            />
-          </View>
+          <AppLabel
+            text={title}
+            size="extra-large"
+            style="bold"
+            styleProp={[globalStyles.flex1, globalStyles.marginLeftSize7]}
+            foreground={transparent ? COLOR_8 : undefined}
+            alignment="left"
+          />
         )}
         {TitleNode && (
           <View
             style={[
               globalStyles.flex1,
-              globalStyles.paddingHorizontalSize4,
+              globalStyles.marginLeftSize7,
               globalStyles.flexRow,
             ]}
           >
@@ -101,23 +101,24 @@ export function AppHeader({
         {rightIcon && (
           <Pressable
             style={[
-              globalStyles.alignCenter,
-              globalStyles.flexRow,
-              globalStyles.paddingHorizontalSize4,
               {
                 marginLeft: "auto",
               },
+              globalStyles.marginLeftSize7,
             ]}
             android_disableSound
             onPress={onRightIconPress}
           >
-            <AppIcon name={rightIcon} />
+            <AppIcon
+              name={rightIcon}
+              foreground={transparent ? COLOR_8 : undefined}
+            />
           </Pressable>
         )}
         {RightNode && (
           <View
             style={[
-              globalStyles.paddingHorizontalSize4,
+              globalStyles.marginLeftSize7,
               globalStyles.flexRow,
               { marginLeft: "auto" },
             ]}
@@ -131,13 +132,13 @@ export function AppHeader({
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
+  header: {
+    height: HEADER_HEIGHT,
+  },
+  headerWrapper: {
     left: 0,
     right: 0,
     top: 0,
     width: "100%",
-  },
-  header: {
-    height: HEADER_HEIGHT,
   },
 });

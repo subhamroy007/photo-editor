@@ -1,490 +1,599 @@
-import React, { useCallback, useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import Animated, { Layout } from "react-native-reanimated";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
+import React, { useCallback, useRef, useState } from "react";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { shallowEqual } from "react-redux";
+import { toggleAccountFollowing } from "../../api/accounts/accountSlice";
 import {
-  COLOR_1,
+  selectMuteState,
+  selectProfilePicuture,
+} from "../../api/global/appSelector";
+import { toggleMuteState } from "../../api/global/appSlice";
+import { selectPostItem } from "../../api/post/postSelector";
+import { togglePostLike } from "../../api/post/postSlice";
+import {
   COLOR_10,
   COLOR_11,
-  COLOR_6,
+  COLOR_5,
   COLOR_7,
+  COLOR_8,
   IMAGE_POST_CONTENT_HEIGHT,
-  LONG_PRESS_DURATION_MS,
-  SIZE_20,
-  SIZE_21,
-  SIZE_27,
+  SCREEN_WIDTH,
+  SHORTS_POST_CONTENT_HEIGHT,
+  SIZE_12,
+  SIZE_5,
+  SIZE_6,
+  SIZE_9,
+  VIDEO_POST_CONTENT_HEIGHT,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
-import { PostItemProps } from "../../constants/types";
-import { getTimeElapsedString } from "../../constants/utility";
+import {
+  PostItemProps,
+  RootBotttomTabsNavigationProp,
+} from "../../constants/types";
+import {
+  getCountString,
+  getDurationString,
+  getTimeElapsedString,
+} from "../../constants/utility";
+import { useScaleUpAnimation } from "../../hooks/useScaleUpAnimation";
+import { useSpringAnimation } from "../../hooks/useSpringAnimation";
+import { useStoreDispatch } from "../../hooks/useStoreDispatch";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 import { AppAvatar } from "../utility/AppAvatar";
 import { AppIcon } from "../utility/AppIcon";
 import { AppLabel } from "../utility/AppLabel";
-import { AppText } from "../utility/AppText";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { FeedImagePostBody } from "./FeedImagePostBody";
-import { useScaleUpAnimation } from "../../hooks/useScaleUpAnimation";
-import { MediaLoadingComponent } from "../utility/MediaLoadingComponent";
+import { AppPressable } from "../utility/AppPressable";
+import { HighlightedText } from "../utility/HighlightedText";
+import { SoundTrackAnimation } from "../utility/SoundTrackAnimation";
+import { ImagePostBody } from "./ImagePostBody";
+import { MomentsPostBody } from "./MomentsPostBody";
+import { VideoPostBody } from "./VideoPostBody";
 
 export const FeedPostItem = React.memo<PostItemProps>(
   (props) => {
     const {
-      width,
-      notify,
-      onLikeIconPress,
-      isVisible,
-      isMuted,
-      isStoryLoading,
-      onAccountIdPress,
-      onAudioLabelPress,
-      onAuthorAvatarPress,
-      onAuthorFollowButtonPress,
-      onCommentIconPress,
-      onHashtagPress,
-      onLikeCountPress,
-      onLocationLabelPress,
-      onMoreIconPress,
-      onShareIconPress,
-      onTagIconPress,
-      showFollowButton,
-      isCaptionExpanded,
-      onCaptionPress,
-      post: {
-        poster,
-        taggedAccounts,
-        type,
-        media,
-        audio,
-        author,
-        caption,
-        duration,
-        isLiked,
-        isSaved,
-        noOfComments,
-        noOfLikes,
-        noOfViews,
-        taggedLocation,
-        timestamp,
-        title,
-        topLikes,
-      },
+      openCommentsShutter,
+      openLikesShutter,
+      openMoreOptionModal,
+      openTagsShuttrer,
+      openShareShutter,
+      postId,
+      isItemFocused,
     } = props;
 
-    const [{ isError, isLoading, isReady }, setState] = useState<{
-      isLoading: boolean;
-      isReady: boolean;
-      isError: boolean;
-    }>({ isError: false, isLoading: true, isReady: false });
+    const [isCaptionExpanded, setCaptionExpanded] = useState(false);
+
+    const isScreenFocused = useIsFocused();
+
+    const dispatch = useStoreDispatch();
+
+    const navigation = useNavigation<RootBotttomTabsNavigationProp>();
+
+    const { left, right } = useSafeAreaInsets();
+
+    const [offsetOrPosition, setOffsetOrPosition] = useState(0);
+
+    const profilePicture = useStoreSelector(
+      selectProfilePicuture,
+      shallowEqual
+    );
 
     const { scaleUpAnimationStyle, startScaleUpAnimation } =
       useScaleUpAnimation();
 
-    const loadHandler = useCallback(() => {
-      setState((prevState) => ({
-        ...prevState,
-        isLoading: false,
-        isReady: true,
-      }));
+    const { springAnimationStyle, startSpringAnimation } = useSpringAnimation();
+
+    const getPost = useCallback((state) => selectPostItem(state, postId), []);
+
+    const onOffsetOrPositionChange = useCallback(
+      (value: number) => setOffsetOrPosition(value),
+      []
+    );
+
+    const isMuted = useStoreSelector(selectMuteState);
+
+    const post = useStoreSelector(getPost, shallowEqual);
+
+    const showFollowButton = useRef(!post.author.isFollowing).current;
+
+    const onLikeIconPress = useCallback((setToLike: boolean = false) => {
+      dispatch(togglePostLike(postId, setToLike));
+      startSpringAnimation();
     }, []);
 
-    const errorHandler = useCallback(() => {
-      setState((prevState) => ({
-        ...prevState,
-        isError: true,
-        isLoading: false,
-      }));
-      notify("something went wrong");
-    }, []);
+    const onFollowButtonPress = useCallback(() => {
+      dispatch(toggleAccountFollowing(post.author.id));
+    }, [post.author]);
 
-    const retryHandler = useCallback(() => {
-      setState((prevState) => ({
-        ...prevState,
-        isError: false,
-        isLoading: true,
-      }));
-    }, []);
-
-    const tapHandler = useCallback(() => {}, []);
-
-    const doubleTapHandler = useCallback(() => {
+    const onDoubleTap = useCallback(() => {
       onLikeIconPress(true);
       startScaleUpAnimation();
     }, []);
 
-    const longPressHandler = useCallback(() => {
-      onMoreIconPress();
+    const onCommentIconPress = useCallback(() => {
+      openCommentsShutter(postId);
+    }, [postId]);
+
+    const onMoreIconPress = useCallback(() => {
+      openMoreOptionModal(postId);
     }, []);
 
-    const tapGesture = Gesture.Tap()
-      .onStart(tapHandler)
-      .maxDuration(LONG_PRESS_DURATION_MS)
-      .enabled(isVisible && isReady);
-
-    const doubleTapGesture = Gesture.Tap()
-      .numberOfTaps(2)
-      .onStart(doubleTapHandler)
-      .enabled(isVisible && isReady);
-
-    const longPressGesture = Gesture.LongPress()
-      .onStart(longPressHandler)
-      .minDuration(LONG_PRESS_DURATION_MS)
-      .enabled(isVisible && isReady);
-
-    const compositeGesture = Gesture.Exclusive(
-      doubleTapGesture,
-      tapGesture,
-      longPressGesture
+    const navigateToAccount = useCallback(
+      (userid: string) => {
+        navigation.push("BottomTabs", {
+          screen: "UtilityStacks",
+          params: { screen: "Profile", params: { userid } },
+        });
+      },
+      [navigation]
     );
 
+    const onTagPress = useCallback(() => {
+      if (typeof post.accounts === "string") {
+        navigateToAccount(post.accounts);
+      } else if (post.accounts !== 0) {
+        openTagsShuttrer(postId);
+      }
+    }, [post.accounts, navigateToAccount]);
+
+    const onLocationPress = useCallback(() => {
+      if (post.location !== "") {
+        navigation.push("BottomTabs", {
+          screen: "UtilityStacks",
+          params: { screen: "Location", params: { locationId: post.location } },
+        });
+      }
+    }, [navigation, post.location]);
+
+    const onAuthorIdPress = useCallback(() => {
+      navigateToAccount(post.author.userid);
+    }, [post.author, navigateToAccount]);
+
+    const onCaptionPress = useCallback(() => {
+      if (isCaptionExpanded) {
+        onCommentIconPress();
+      } else {
+        setCaptionExpanded(true);
+      }
+    }, [isCaptionExpanded]);
+
+    const onLikeCountPress = useCallback(() => {
+      openLikesShutter(postId);
+    }, []);
+
+    const onShareIconPress = useCallback(() => {
+      openShareShutter(postId);
+    }, []);
+
+    const postHeight =
+      post.type === "photo"
+        ? IMAGE_POST_CONTENT_HEIGHT
+        : post.type === "video"
+        ? VIDEO_POST_CONTENT_HEIGHT
+        : SHORTS_POST_CONTENT_HEIGHT;
+
     return (
-      <Animated.View layout={Layout.duration(500)}>
-        <View style={[globalStyles.flexRow, { height: SIZE_20 }]}>
-          <Pressable
-            android_disableSound
+      <View>
+        <View
+          style={[
+            globalStyles.flexRow,
+            globalStyles.paddingVerticalSize2,
+            globalStyles.paddingHorizontalSize4,
+            globalStyles.alignCenter,
+          ]}
+        >
+          <AppAvatar
+            image={post.author.profilePicture}
+            hasRing={post.author.showStoryIndicator}
+            isActive={post.author.showStoryIndicator}
+          />
+          <View
             style={[
-              globalStyles.paddingHorizontalSize4,
-              globalStyles.justifyCenter,
+              globalStyles.flex1,
+              globalStyles.marginLeftSize4,
+              globalStyles.alignStart,
             ]}
-            onPress={onAuthorAvatarPress}
           >
-            <AppAvatar
-              hasRing={author.hasUnseenStory}
-              uri={author.profilePictureUri}
-              isActive={author.hasUnseenStory}
-              isAnimated={isStoryLoading}
-            />
-          </Pressable>
-          <View style={[globalStyles.flex1, globalStyles.justifyCenter]}>
-            <View style={[globalStyles.flexRow]}>
-              <Pressable
+            <Pressable android_disableSound onPress={onAuthorIdPress}>
+              <AppLabel text={post.author.userid} />
+            </Pressable>
+            {(post.location !== "" || post.accounts !== 0) && (
+              <View
                 style={[
-                  globalStyles.alignCenter,
-                  globalStyles.justifyCenter,
-                  { maxWidth: "75%" },
+                  globalStyles.marginTopSize1,
+                  globalStyles.flexRow,
+                  globalStyles.stretchSelf,
                 ]}
-                onPress={() => {
-                  onAccountIdPress(author.userId);
-                }}
               >
-                <AppLabel text={author.userId} styleProp={{ width: "100%" }} />
-              </Pressable>
-              {showFollowButton && (
-                <Pressable
-                  style={[
-                    globalStyles.alignCenter,
-                    globalStyles.justifyCenter,
-                    { marginHorizontal: 12 },
-                  ]}
-                  onPress={onAuthorFollowButtonPress}
-                >
-                  <AppLabel
-                    text={author.isFollowing ? "following" : "follow"}
-                    foreground={COLOR_1}
-                    style="bold"
-                  />
-                </Pressable>
-              )}
-            </View>
-            {(taggedLocation || taggedAccounts.length > 0) && (
-              <View style={[globalStyles.flexRow, globalStyles.marginTopSize2]}>
-                {taggedLocation && (
+                {post.location !== "" && (
                   <Pressable
+                    android_disableSound
+                    onPress={onLocationPress}
                     style={[
-                      globalStyles.alignCenter,
-                      globalStyles.justifyCenter,
                       globalStyles.flexRow,
-                      { maxWidth: "50%" },
+                      globalStyles.flex1,
+                      globalStyles.alignCenter,
+                      globalStyles.marginRightSize2,
                     ]}
-                    onPress={onLocationLabelPress}
                   >
                     <AppIcon name="location" size="extra-small" />
                     <AppLabel
-                      text={taggedLocation.title}
+                      text={post.location}
+                      size="extra-small"
                       style="regular"
-                      styleProp={[globalStyles.marginLeftSize1]}
+                      styleProp={[
+                        globalStyles.marginLeftSize1,
+                        globalStyles.flex1,
+                      ]}
+                      alignment="left"
                     />
                   </Pressable>
                 )}
-                {taggedAccounts.length !== 0 && (
+                {post.accounts !== 0 && (
                   <Pressable
+                    android_disableSound
                     style={[
-                      globalStyles.alignCenter,
-                      globalStyles.justifyCenter,
                       globalStyles.flexRow,
-                      globalStyles.marginLeftSize4,
-                      { maxWidth: "50%" },
+                      globalStyles.flex1,
+                      globalStyles.alignCenter,
                     ]}
-                    onPress={onTagIconPress}
+                    onPress={onTagPress}
                   >
-                    <AppIcon name="tag-bold" size="extra-small" />
+                    <AppIcon name="tag-regular" size="extra-small" />
                     <AppLabel
                       text={
-                        taggedAccounts.length === 1
-                          ? taggedAccounts[0].userId
-                          : taggedAccounts.length + " Accounts"
+                        typeof post.accounts === "number"
+                          ? post.accounts + " accounts"
+                          : post.accounts
                       }
+                      size="extra-small"
                       style="regular"
-                      styleProp={globalStyles.marginLeftSize1}
+                      styleProp={[
+                        globalStyles.marginLeftSize1,
+                        globalStyles.flex1,
+                      ]}
+                      alignment="left"
                     />
                   </Pressable>
                 )}
               </View>
             )}
           </View>
-        </View>
-        <GestureDetector gesture={compositeGesture}>
-          <Animated.View
-            style={[
-              { height: IMAGE_POST_CONTENT_HEIGHT },
-              globalStyles.justifyCenter,
-            ]}
-          >
-            {type === "photo" && (
-              <FeedImagePostBody
-                images={media}
-                isLoading={isLoading}
-                isReady={isReady}
-                isVisble={isVisible}
-                onError={errorHandler}
-                onLoad={loadHandler}
-                width={width}
-              />
-            )}
-            {isReady && (
-              <Animated.View
-                style={[
-                  globalStyles.absolutePosition,
-                  scaleUpAnimationStyle,
-                  globalStyles.alignSelfCenter,
-                ]}
-              >
-                <AppIcon
-                  name="heart-solid"
-                  background={COLOR_11}
-                  isBackgroundVisible
-                  size="large"
-                  gap="medium"
-                />
-              </Animated.View>
-            )}
-
-            {!isReady && (
-              <MediaLoadingComponent
-                isError={isError}
-                isLoading={isLoading}
-                onRetry={retryHandler}
-                poster={poster}
-              />
-            )}
-          </Animated.View>
-        </GestureDetector>
-        {/* icons to interact with the post */}
-        <View
-          style={[
-            globalStyles.justifyBetween,
-            globalStyles.flexRow,
-            { height: SIZE_21 },
-          ]}
-        >
-          <View style={[globalStyles.flexRow, globalStyles.flex1]}>
+          {showFollowButton && (
             <Pressable
               android_disableSound
-              onPress={() => {
-                onLikeIconPress();
-              }}
-              style={[
-                globalStyles.paddingHorizontalSize4,
-                globalStyles.alignCenter,
-                globalStyles.justifyCenter,
-              ]}
+              style={globalStyles.marginLeftSize4}
+              onPress={onFollowButtonPress}
+            >
+              <AppLabel
+                text={post.author.isFollowing ? "following" : "follow"}
+                backgroundVisible
+                gap="small"
+                corner="small-round"
+                size="extra-small"
+                style="bold"
+              />
+            </Pressable>
+          )}
+        </View>
+        <AppPressable
+          style={[{ height: postHeight }, globalStyles.justifyCenter]}
+          onDoubleTap={onDoubleTap}
+          onLongPress={onMoreIconPress}
+        >
+          {post.type === "photo" && (
+            <>
+              <ImagePostBody
+                isFullScreen={false}
+                images={post.photo!.photos}
+                coverEncoded={post.previewEncoded}
+                onOffsetChange={onOffsetOrPositionChange}
+              />
+              <AppLabel
+                text={`${offsetOrPosition + 1}/${post.photo!.photos.length}`}
+                style="regular"
+                foreground={COLOR_8}
+                styleProp={[globalStyles.absolutePosition, styles.topLabel]}
+              />
+            </>
+          )}
+          {post.type === "video" && (
+            <>
+              <VideoPostBody
+                isFullScreen={false}
+                coverEncoded={post.previewEncoded}
+                onPositionChange={onOffsetOrPositionChange}
+                isFocused={isItemFocused && isScreenFocused}
+                video={post.video!.video}
+              />
+              <AppLabel
+                text={getDurationString(
+                  post.video!.duration - offsetOrPosition
+                )}
+                style="regular"
+                foreground={COLOR_8}
+                styleProp={[globalStyles.absolutePosition, styles.topLabel]}
+              />
+            </>
+          )}
+          {post.type === "moment" && (
+            <>
+              <MomentsPostBody
+                isFullScreen={false}
+                coverEncoded={post.previewEncoded}
+                onPositionChange={onOffsetOrPositionChange}
+                isFocused={isItemFocused && isScreenFocused}
+                video={post.moment!.video}
+              />
+              {(post.moment!.audio || post.moment!.filter) && (
+                <View
+                  style={[
+                    globalStyles.absolutePosition,
+                    styles.topLabel,
+                    globalStyles.alignStart,
+                  ]}
+                >
+                  {post.moment!.audio && (
+                    <Pressable
+                      style={[globalStyles.flexRow, globalStyles.alignCenter]}
+                      android_disableSound
+                    >
+                      <SoundTrackAnimation />
+                      <AppLabel
+                        text={post.moment!.audio.title}
+                        style="regular"
+                        foreground={COLOR_8}
+                        styleProp={globalStyles.marginLeftSize2}
+                      />
+                    </Pressable>
+                  )}
+                  {post.moment!.filter && (
+                    <Pressable
+                      style={[
+                        globalStyles.flexRow,
+                        globalStyles.alignCenter,
+                        globalStyles.marginTopSize2,
+                      ]}
+                      android_disableSound
+                    >
+                      <AppIcon
+                        name="filter"
+                        size="extra-small"
+                        foreground={COLOR_8}
+                      />
+                      <AppLabel
+                        text={post.moment!.filter.name}
+                        style="regular"
+                        foreground={COLOR_8}
+                        styleProp={globalStyles.marginLeftSize2}
+                      />
+                    </Pressable>
+                  )}
+                </View>
+              )}
+            </>
+          )}
+          {post.type !== "photo" && (
+            <Pressable
+              style={[globalStyles.absolutePosition, styles.bottomIcon]}
+              android_disableSound
+              onPress={() => dispatch(toggleMuteState())}
+              hitSlop={SIZE_12}
             >
               <AppIcon
-                name={isLiked ? "heart-solid" : "heart-outline"}
-                foreground={isLiked ? COLOR_10 : COLOR_7}
+                name={isMuted ? "volume-high" : "mute"}
+                foreground={COLOR_8}
+                size="small"
               />
             </Pressable>
-            <Pressable
-              onPress={onCommentIconPress}
-              android_disableSound
-              style={[
-                globalStyles.paddingHorizontalSize4,
-                globalStyles.alignCenter,
-                globalStyles.justifyCenter,
-              ]}
-            >
-              <AppIcon name="comment-outline" />
-            </Pressable>
-            <Pressable
-              onPress={onShareIconPress}
-              android_disableSound
-              style={[
-                globalStyles.paddingHorizontalSize4,
-                globalStyles.alignCenter,
-                globalStyles.justifyCenter,
-              ]}
-            >
-              <AppIcon name="share-outline" />
-            </Pressable>
-          </View>
-          <Pressable
-            onPress={onMoreIconPress}
+          )}
+          <Animated.View
             style={[
-              globalStyles.paddingHorizontalSize4,
-              globalStyles.alignCenter,
-              globalStyles.justifyCenter,
+              globalStyles.absolutePosition,
+              globalStyles.alignSelfCenter,
+              scaleUpAnimationStyle,
             ]}
           >
-            <AppIcon name="more" size="small" />
-          </Pressable>
-        </View>
-        {/* render title if available */}
-        {title !== "" && (
-          <AppLabel
-            text={title}
-            size="medium"
-            noOfLines={4}
-            gapVertical="extra-small"
-            gapHorizontal="large"
-            alignment="left"
-          />
-        )}
-        {/* render views if any */}
-        {noOfViews > 0 && (
-          <AppLabel
-            text={noOfViews + " views"}
-            gapVertical="small"
-            gapHorizontal="large"
-            alignment="left"
-          />
-        )}
-        {/* render views count and top likes if any */}
-        {noOfLikes > 0 &&
-          (topLikes.length === 0 ? (
-            <AppLabel
-              text={noOfLikes === 1 ? "1 like" : noOfLikes + " likes"}
-              gapVertical="extra-small"
-              gapHorizontal="large"
-              onPress={onLikeCountPress}
-              alignment="left"
+            <AppIcon
+              name="heart-solid"
+              backgroundVisible
+              background={COLOR_11}
+              size="large"
+              gap="medium"
             />
-          ) : (
-            <Text
+          </Animated.View>
+        </AppPressable>
+        <View
+          style={[
+            globalStyles.flexRow,
+            globalStyles.alignCenter,
+            globalStyles.justifyAround,
+            globalStyles.paddingVerticalSize4,
+          ]}
+        >
+          <Pressable
+            android_disableSound
+            onPress={onMoreIconPress}
+            hitSlop={SIZE_12}
+          >
+            <AppIcon name="info" />
+          </Pressable>
+          <Pressable
+            android_disableSound
+            onPress={onShareIconPress}
+            hitSlop={SIZE_12}
+          >
+            <AppIcon name="share-outline" />
+          </Pressable>
+          <Pressable
+            android_disableSound
+            onPress={onCommentIconPress}
+            hitSlop={SIZE_12}
+          >
+            <AppIcon name="comment-outline" />
+          </Pressable>
+          <AppPressable
+            onPress={onLikeIconPress}
+            hitSlop={SIZE_12}
+            animatedStyle={springAnimationStyle}
+          >
+            <AppIcon
+              name={post.isLiked ? "heart-solid" : "heart-outline"}
+              foreground={post.isLiked ? COLOR_10 : COLOR_7}
+            />
+          </AppPressable>
+        </View>
+        {post.type === "video" && (
+          <AppLabel
+            text={post.video!.title}
+            style="bold"
+            styleProp={[
+              globalStyles.paddingVerticalSize2,
+              globalStyles.paddingHorizontalSize4,
+            ]}
+            alignment="left"
+            noOfLines={4}
+          />
+        )}
+        {(post.noOfComments > 0 ||
+          post.noOfLikes > 0 ||
+          post.noOfViews > 0) && (
+          <View
+            style={[
+              globalStyles.flexRow,
+              globalStyles.paddingHorizontalSize4,
+              globalStyles.paddingVerticalSize2,
+              globalStyles.alignCenter,
+            ]}
+          >
+            {post.noOfViews > 0 && (
+              <AppLabel
+                text={post.noOfViews + " views"}
+                styleProp={globalStyles.marginRightSize4}
+              />
+            )}
+            {post.noOfLikes > 0 && (
+              <Pressable
+                android_disableSound
+                style={globalStyles.marginRightSize4}
+                onPress={onLikeCountPress}
+                hitSlop={SIZE_12}
+              >
+                <AppLabel text={getCountString(post.noOfLikes) + " likes"} />
+              </Pressable>
+            )}
+            {post.noOfComments > 0 && (
+              <Pressable
+                android_disableSound
+                onPress={onCommentIconPress}
+                hitSlop={SIZE_12}
+              >
+                <AppLabel
+                  text={getCountString(post.noOfComments) + " comments"}
+                />
+              </Pressable>
+            )}
+          </View>
+        )}
+        {post.likes.length > 0 && (
+          <View
+            style={[
+              globalStyles.flexRow,
+              globalStyles.alignCenter,
+              globalStyles.paddingVerticalSize2,
+              globalStyles.paddingHorizontalSize4,
+            ]}
+          >
+            <AppIcon
+              name="heart-solid"
+              foreground={COLOR_10}
+              size="extra-small"
+            />
+            {post.likes.map((like) => (
+              <AppAvatar
+                image={like.profilePicture}
+                size="extra-small"
+                key={like.userid}
+              />
+            ))}
+            {post.likes.map((like) => (
+              <Pressable
+                android_disableSound
+                style={globalStyles.marginLeftSize2}
+                onPress={() => navigateToAccount(like.userid)}
+                key={like.userid}
+              >
+                <AppLabel text={like.userid} size="extra-small" />
+              </Pressable>
+            ))}
+          </View>
+        )}
+        {post.caption !== "" && (
+          <Pressable android_disableSound onPress={onCaptionPress}>
+            <HighlightedText
+              text={post.caption}
+              author={post.author.userid}
+              noOfLines={isCaptionExpanded ? undefined : 2}
               style={[
                 globalStyles.paddingHorizontalSize4,
                 globalStyles.paddingVerticalSize1,
-                {
-                  textAlign: "left",
-                },
               ]}
-            >
-              <AppLabel text="liked by " style="regular" noOfLines={2} />
-              {topLikes.map((like) => (
-                <AppLabel
-                  text={like.userId + " "}
-                  key={like.id}
-                  onPress={() => {
-                    onAccountIdPress(like.userId);
-                  }}
-                  noOfLines={2}
-                />
-              ))}
-              {noOfLikes - topLikes.length > 0 && (
-                <>
-                  <AppLabel text="and " style="regular" noOfLines={2} />
-                  <AppLabel
-                    text={noOfLikes - topLikes.length + " other"}
-                    onPress={onLikeCountPress}
-                    noOfLines={2}
-                  />
-                </>
-              )}
-            </Text>
-          ))}
-        {/* render caption if available */}
-        {caption !== "" && (
-          <Text
-            ellipsizeMode="tail"
-            style={[
-              globalStyles.paddingHorizontalSize4,
-              globalStyles.paddingVerticalSize1,
-              {
-                textAlign: "left",
-              },
-            ]}
-            numberOfLines={isCaptionExpanded ? 2000 : 2}
-            onPress={onCaptionPress}
-          >
-            <AppLabel
-              text={author.userId + " "}
-              onPress={() => {
-                onAccountIdPress(author.userId);
-              }}
-              noOfLines={2}
             />
-            <AppText
-              text={caption}
-              onPress={(text: string) => {
-                if (text.startsWith("@")) {
-                  onAccountIdPress(text);
-                } else if (text.startsWith("#")) {
-                  onHashtagPress(text);
-                } else {
-                  onCaptionPress();
-                }
-              }}
-              isExpanded={true}
+          </Pressable>
+        )}
+        {post.comments.map((comment) => {
+          return (
+            <HighlightedText
+              key={comment.id}
+              text={comment.content}
+              author={comment.author}
+              noOfLines={1}
+              style={[
+                globalStyles.paddingHorizontalSize4,
+                globalStyles.paddingVerticalSize1,
+              ]}
             />
-          </Text>
-        )}
-        {/* render no of comments if any */}
-        {noOfComments > 0 && (
-          <AppLabel
-            text={
-              "Show all " +
-              (noOfComments > 2 ? noOfComments + " " : "") +
-              "Comments"
-            }
-            foreground={COLOR_6}
-            onPress={onCommentIconPress}
-            gapHorizontal="large"
-            gapVertical="small"
-            alignment="left"
-          />
-        )}
-        {/* show the comment box */}
+          );
+        })}
         <Pressable
+          android_disableSound
+          onPress={onCommentIconPress}
           style={[
-            globalStyles.paddingHorizontalSize4,
-            {
-              height: SIZE_27,
-            },
             globalStyles.flexRow,
+            globalStyles.paddingVerticalSize1,
+            globalStyles.paddingHorizontalSize4,
             globalStyles.alignCenter,
           ]}
-          onPress={onCommentIconPress}
         >
-          <AppAvatar uri={author.profilePictureUri} size="small" />
+          <AppAvatar image={profilePicture} />
           <AppLabel
-            text="leave a comment..."
-            foreground={COLOR_6}
+            text="Leave a comment..."
+            foreground={COLOR_5}
+            styleProp={globalStyles.marginLeftSize2}
             style="regular"
-            size="small"
-            styleProp={globalStyles.marginLeftSize4}
           />
         </Pressable>
-        {/* show timestamp */}
         <AppLabel
-          text={getTimeElapsedString(timestamp)}
+          text={getTimeElapsedString(post.timestamp)}
+          styleProp={[
+            globalStyles.paddingVerticalSize1,
+            globalStyles.paddingHorizontalSize4,
+          ]}
+          foreground={COLOR_5}
           size="extra-small"
-          foreground={COLOR_6}
           style="regular"
-          gapHorizontal="large"
-          gapVertical="small"
-          styleProp={globalStyles.alignSelfStart}
+          alignment="left"
         />
-      </Animated.View>
+      </View>
     );
   },
-  (prevState, nextState) => {
-    return false;
+  () => {
+    return true;
   }
 );
+
+const styles = StyleSheet.create({
+  topLabel: { top: SIZE_5, left: SIZE_5 },
+  bottomIcon: { right: SIZE_6, bottom: SIZE_6 },
+});

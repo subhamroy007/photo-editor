@@ -1,96 +1,78 @@
-import { useEffect } from "react";
-import { StyleProp, StyleSheet, ViewStyle } from "react-native";
-import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedProps,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
+import { useEffect, useRef } from "react";
+import { Animated, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { Easing } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
+import { selectAppTheme } from "../../api/global/appSelector";
 import {
-  COLOR_6,
+  COLOR_19,
+  COLOR_5,
   SIZE_1,
+  SIZE_15,
   SIZE_17,
   SIZE_20,
   SIZE_21,
   SIZE_22,
 } from "../../constants/constants";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 
 const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 export type AppLoadingIndicatorProps = {
-  color?: string;
-  size?: "small" | "medium" | "large" | "extra-large" | "extra-small";
   style?: StyleProp<ViewStyle>;
 };
 
-export function AppLoadingIndicator({
-  color,
-  size,
-  style,
-}: AppLoadingIndicatorProps) {
-  color = color ? color : COLOR_6;
-  size = size ? size : "medium";
+export function AppLoadingIndicator({ style }: AppLoadingIndicatorProps) {
+  const theme = useStoreSelector(selectAppTheme);
 
-  const animatedValue = useSharedValue(0);
+  const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    animatedValue.value = withRepeat(
-      withTiming(1, { duration: 1000, easing: Easing.linear }),
-      -1,
-      false
-    );
-  }, []);
+  let color = "";
 
-  let indicatorSize = 0;
-  let strokeSize = 0;
-  let circumference = 0;
-
-  switch (size) {
-    case "extra-small":
-      indicatorSize = SIZE_22;
-      strokeSize = 2 * StyleSheet.hairlineWidth;
-      break;
-
-    case "small":
-      indicatorSize = SIZE_21;
-      strokeSize = 3 * StyleSheet.hairlineWidth;
-      break;
-
-    case "medium":
-      indicatorSize = SIZE_20;
-      strokeSize = 4 * StyleSheet.hairlineWidth;
-      break;
-
-    case "large":
-      indicatorSize = SIZE_17;
-      strokeSize = 5 * StyleSheet.hairlineWidth;
-      break;
-
-    case "extra-large":
-      indicatorSize = SIZE_1;
-      strokeSize = 6 * StyleSheet.hairlineWidth;
-      break;
+  if (theme === "light") {
+    color = COLOR_5;
+  } else {
+    color = COLOR_19;
   }
 
-  circumference = Math.PI * (indicatorSize - strokeSize);
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(animatedValue, {
+        toValue: 1,
+        useNativeDriver: true,
+        duration: 500,
+        easing: Easing.linear,
+        isInteraction: false,
+      })
+    ).start();
+  }, []);
 
-  const animatedProps = useAnimatedProps(() => {
-    return {
-      rotation: interpolate(animatedValue.value, [0, 1], [0, 360]),
-    };
-  });
+  let indicatorSize = SIZE_21;
+  let strokeSize = 4 * StyleSheet.hairlineWidth;
+  let circumference = Math.PI * indicatorSize;
+
+  circumference = Math.PI * (indicatorSize - strokeSize);
 
   return (
     <AnimatedSvg
       width={indicatorSize}
       height={indicatorSize}
       strokeWidth={strokeSize}
-      style={[{ borderRadius: indicatorSize / 2 }, style]}
+      style={[
+        {
+          borderRadius: indicatorSize / 2,
+          transform: [
+            {
+              rotateZ: animatedValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0 + "deg", 360 + "deg"],
+                extrapolate: "clamp",
+              }),
+            },
+          ],
+        },
+        style,
+      ]}
       stroke={color}
-      animatedProps={animatedProps}
     >
       <Circle
         cx={indicatorSize / 2}

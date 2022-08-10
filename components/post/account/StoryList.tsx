@@ -22,7 +22,7 @@ export function StoryList(props: StoryListProps) {
       return (
         <StoryListItem
           account={item}
-          isStoryLoading={item.userId === storyLoadingAccountId}
+          isStoryLoading={item.userid === storyLoadingAccountId}
           onDoubleTap={() => {
             onDoubleTap(index);
           }}
@@ -49,7 +49,7 @@ export function StoryList(props: StoryListProps) {
         globalStyles.paddingHorizontalSize2,
       ]}
       style={[
-        globalStyles.defaultBottomBorderWidth,
+        globalStyles.primaryBottomBorderWidth,
         globalStyles.primaryDarkBorderColor,
       ]}
       extraData={props}

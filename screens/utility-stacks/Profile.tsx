@@ -29,7 +29,7 @@ type ProfileNavigationParams = CompositeScreenProps<
 export function Profile({
   navigation,
   route: {
-    params: { userId },
+    params: { userid },
   },
 }: ProfileNavigationParams) {
   return (
@@ -39,7 +39,7 @@ export function Profile({
     >
       <AppHeader
         leftIcon="arrow-left"
-        title={userId}
+        title={userid}
         onLeftIconPress={navigation.goBack}
       />
     </SafeAreaView>

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleProp, View, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -24,10 +24,10 @@ export function SoundTrackAnimation({
   let barSize = 0;
   switch (size) {
     case "small":
-      barSize = SIZE_7;
+      barSize = 5 * StyleSheet.hairlineWidth;
       break;
     case "large":
-      barSize = SIZE_26;
+      barSize = 7 * StyleSheet.hairlineWidth;
       break;
   }
 
