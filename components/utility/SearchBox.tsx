@@ -12,7 +12,7 @@ import {
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { useStoreSelector } from "../../hooks/useStoreSelector";
-import { AppIcon } from "./AppIcon";
+import { Icon } from "./Icon";
 
 export type SearchBoxProps = {
   textContent: string;
@@ -42,19 +42,19 @@ export function SearchBox({
   return (
     <View
       style={[
-        globalStyles.paddingVerticalSize2,
+        globalStyles.paddingVerticalSize4,
         globalStyles.paddingHorizontalSize4,
         globalStyles.flexRow,
         globalStyles.alignCenter,
-        globalStyles.secondaryBottomBorderWidth,
+        globalStyles.primaryBottomBorderWidth,
         transparent || theme === "dark"
-          ? globalStyles.primaryLightBorderColor
-          : globalStyles.primaryDarkBorderColor,
+          ? globalStyles.primaryDarkBorderColor
+          : globalStyles.primaryLightBorderColor,
         style,
       ]}
     >
-      <AppIcon
-        name="search-bold"
+      <Icon
+        name="search-solid"
         size="small"
         transparent={transparent}
         type="info"
@@ -83,7 +83,7 @@ export function SearchBox({
           style={globalStyles.marginLeftSize4}
           onPress={() => onTextContentChange("")}
         >
-          <AppIcon name="close" size="extra-small" transparent={transparent} />
+          <Icon name="close" size="extra-small" transparent={transparent} />
         </Pressable>
       )}
     </View>

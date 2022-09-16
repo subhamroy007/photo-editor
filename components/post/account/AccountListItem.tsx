@@ -1,39 +1,30 @@
-import { useNavigation } from "@react-navigation/native";
 import React, { useCallback } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { shallowEqual } from "react-redux";
 import { selectAccountItem } from "../../../api/accounts/accountSelector";
 import { toggleAccountFollowing } from "../../../api/accounts/accountSlice";
-import {
-  selectAccountId,
-  selectAppTheme,
-} from "../../../api/global/appSelector";
-import { COLOR_19, COLOR_5, COLOR_8 } from "../../../constants/constants";
+import { selectAccountId } from "../../../api/global/appSelector";
 import { globalStyles } from "../../../constants/style";
-import { RootBotttomTabsNavigationProp } from "../../../constants/types";
 import { useStoreDispatch } from "../../../hooks/useStoreDispatch";
 import { useStoreSelector } from "../../../hooks/useStoreSelector";
-import { AppAvatar } from "../../utility/AppAvatar";
-import { AppLabel } from "../../utility/AppLabel";
+import { Avatar } from "../../utility/Avatar";
+import { Label } from "../../utility/Label";
 import { AppPressable } from "../../utility/AppPressable";
 
 export type AccountListItemProps = {
-  userid: string;
+  id: string;
+  gotoAccount: (userid: string) => void;
   transparent?: boolean;
 };
 
 export const AccountListItem = React.memo<AccountListItemProps>(
   (props) => {
-    const { userid, transparent } = props;
-
-    const navigation = useNavigation<RootBotttomTabsNavigationProp>();
+    const { id, transparent, gotoAccount } = props;
 
     const getAccount = useCallback(
-      (state) => selectAccountItem(state, userid),
-      [userid]
+      (state) => selectAccountItem(state, id),
+      [id]
     );
-
-    const theme = useStoreSelector(selectAppTheme);
 
     const account = useStoreSelector(getAccount, shallowEqual);
 
@@ -42,15 +33,8 @@ export const AccountListItem = React.memo<AccountListItemProps>(
     const dispatch = useStoreDispatch();
 
     const onFollowButtonPress = useCallback(() => {
-      dispatch(toggleAccountFollowing(userid));
-    }, [userid, dispatch]);
-
-    const gotoAccount = useCallback(() => {
-      navigation.push("BottomTabs", {
-        screen: "UtilityStacks",
-        params: { screen: "Profile", params: { userid } },
-      });
-    }, [navigation, userid]);
+      dispatch(toggleAccountFollowing(id));
+    }, [id, dispatch]);
 
     const onAvatarPress = useCallback(() => {
       console.log("avatar pressed");
@@ -58,7 +42,7 @@ export const AccountListItem = React.memo<AccountListItemProps>(
 
     return (
       <AppPressable
-        onPress={gotoAccount}
+        onPress={() => gotoAccount(account.userid)}
         style={[
           globalStyles.flexRow,
           globalStyles.paddingVerticalSize2,
@@ -67,7 +51,7 @@ export const AccountListItem = React.memo<AccountListItemProps>(
         ]}
       >
         <Pressable android_disableSound onPress={onAvatarPress}>
-          <AppAvatar
+          <Avatar
             image={account.profilePicture}
             isActive={true}
             hasRing={account.hasUnSeenStory}
@@ -82,12 +66,12 @@ export const AccountListItem = React.memo<AccountListItemProps>(
             globalStyles.marginLeftSize4,
           ]}
         >
-          <AppLabel
+          <Label
             text={account.userid}
             alignment="left"
             transparent={transparent}
           />
-          <AppLabel
+          <Label
             text={account.username}
             type="info"
             transparent={transparent}
@@ -96,11 +80,11 @@ export const AccountListItem = React.memo<AccountListItemProps>(
           />
         </View>
         {defaultUserid !== account.userid && (
-          <AppPressable
+          <Pressable
             style={[globalStyles.marginLeftSize4, globalStyles.flex1]}
             onPress={onFollowButtonPress}
           >
-            <AppLabel
+            <Label
               text={account.isFollowing ? "following" : "follow"}
               backgroundVisible={!account.isFollowing}
               borderVisible={account.isFollowing}
@@ -109,18 +93,12 @@ export const AccountListItem = React.memo<AccountListItemProps>(
               corner="small-round"
               transparent={transparent}
             />
-          </AppPressable>
+          </Pressable>
         )}
       </AppPressable>
     );
   },
-  ({ transparent: prevTransparent }, { transparent: nextTransparent }) => {
-    return prevTransparent === nextTransparent;
+  () => {
+    return true;
   }
 );
-
-const styles = StyleSheet.create({
-  label: {
-    maxWidth: "100%",
-  },
-});

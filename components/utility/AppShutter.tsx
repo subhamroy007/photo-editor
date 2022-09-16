@@ -6,7 +6,7 @@ import { selectAppTheme } from "../../api/global/appSelector";
 import { MODAL_ANIMATION_DURATION_MS } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { useStoreSelector } from "../../hooks/useStoreSelector";
-import { AppLabel } from "./AppLabel";
+import { Label } from "./Label";
 
 export const AnimatedSafeAreaView =
   Animated.createAnimatedComponent(SafeAreaView);
@@ -64,7 +64,7 @@ export function AppShutter({
         style={[
           globalStyles.flex1,
           transparent
-            ? globalStyles.semiTransparentBackgroundColor3
+            ? globalStyles.semiTransparentBackgroundColor
             : theme === "light"
             ? globalStyles.primaryLightBackgroundColor
             : globalStyles.primaryDarkBackgroundColor,
@@ -84,7 +84,7 @@ export function AppShutter({
               : globalStyles.primaryDarkBorderColor,
           ]}
         >
-          <AppLabel
+          <Label
             text={title}
             size="medium"
             style="bold"

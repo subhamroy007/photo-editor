@@ -15,7 +15,7 @@ import {
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { useStoreSelector } from "../../hooks/useStoreSelector";
-import { AppLabel } from "./AppLabel";
+import { Label } from "./Label";
 import { AppPressable } from "./AppPressable";
 
 export type AppDialogBoxProps = {
@@ -71,7 +71,7 @@ export function AppDialogBox({
         onPress={onRequestClose}
         style={[
           globalStyles.flex1,
-          globalStyles.semiTransparentBackgroundColor2,
+          globalStyles.semiTransparentBackgroundColor,
           globalStyles.justifyCenter,
           globalStyles.alignCenter,
         ]}
@@ -93,7 +93,7 @@ export function AppDialogBox({
               globalStyles.paddingHorizontalSize4,
             ]}
           >
-            <AppLabel
+            <Label
               text={title}
               size="large"
               style="bold"
@@ -101,7 +101,7 @@ export function AppDialogBox({
               gapVertical="large"
             />
             {info && (
-              <AppLabel
+              <Label
                 text={info}
                 foreground={theme === "dark" ? COLOR_19 : COLOR_5}
                 style="regular"
@@ -130,7 +130,7 @@ export function AppDialogBox({
                 ]}
                 key={item.label}
               >
-                <AppLabel
+                <Label
                   text={item.label}
                   style={index === 0 ? "medium" : "regular"}
                   size="medium"

@@ -8,7 +8,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { COLOR_8, SIZE_26, SIZE_7 } from "../../constants/constants";
+import { COLOR_8 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 
 export type SoundTrackAnimationProps = {

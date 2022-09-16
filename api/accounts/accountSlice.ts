@@ -3,41 +3,26 @@ import {
   createSlice,
   PayloadAction,
 } from "@reduxjs/toolkit";
-import { AccountResponse } from "../../constants/types";
+import { AccountGlobalParams } from "../../constants/types";
+import {
+  convertAccounts,
+  extractAccountsFromPosts,
+} from "../../constants/utility";
+import { fetchFollowingFeed } from "../post/postThunk";
 
-const accountAdapter = createEntityAdapter<AccountResponse>({
-  selectId: (entity) => entity.id,
+const accountAdapter = createEntityAdapter<AccountGlobalParams>({
+  selectId: (entity) => entity.userid,
 });
 
 const accountSlice = createSlice({
   name: "account-slice",
   initialState: accountAdapter.getInitialState(),
   reducers: {
-    storeAccounts: {
-      prepare(accounts: AccountResponse[]) {
-        return { payload: accounts };
-      },
-      reducer(state, { payload }: PayloadAction<AccountResponse[]>) {
-        const result = payload.map<AccountResponse>((item) => {
-          const targetAccount = state.entities[item.id];
-
-          return {
-            ...item,
-            stories: [
-              ...item.stories,
-              ...(targetAccount ? targetAccount.stories : []),
-            ],
-          };
-        });
-
-        accountAdapter.upsertMany(state, result);
-      },
-    },
     toggleAccountFollowing: {
-      prepare(userid: string, setToFollow: boolean = false) {
+      prepare(id: string, setToFollow: boolean = false) {
         return {
           payload: {
-            userid,
+            id,
             setToFollow,
           },
         };
@@ -45,28 +30,58 @@ const accountSlice = createSlice({
       reducer(
         state,
         {
-          payload: { userid, setToFollow },
-        }: PayloadAction<{ userid: string; setToFollow: boolean }>
+          payload: { id, setToFollow },
+        }: PayloadAction<{ id: string; setToFollow: boolean }>
       ) {
-        const account = state.entities[userid];
+        const account = state.entities[id];
         if (account) {
           if (!setToFollow) {
-            account.noOfFollowers = account.isFollowing
-              ? account.noOfFollowers - 1
-              : account.noOfFollowers + 1;
             account.isFollowing = !account.isFollowing;
           } else if (!account.isFollowing) {
-            account.noOfFollowers = account.noOfFollowers + 1;
             account.isFollowing = true;
           }
         }
       },
     },
+    toggleAccountFavourite: {
+      prepare(id: string) {
+        return {
+          payload: id,
+        };
+      },
+      reducer(state, { payload: userid }: PayloadAction<string>) {
+        const account = state.entities[userid];
+        if (account) {
+          account.isFavourite = !account.isFavourite;
+        }
+      },
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(
+      fetchFollowingFeed.fulfilled,
+      (
+        state,
+        {
+          payload: {
+            data: { posts, stories, suggestedAccounts },
+          },
+        }
+      ) => {
+        const accounts: AccountGlobalParams[] = [
+          ...convertAccounts(stories),
+          ...convertAccounts(suggestedAccounts),
+          ...extractAccountsFromPosts(posts.map((item) => item.data)),
+        ];
+
+        accountAdapter.upsertMany(state, accounts);
+      }
+    );
   },
 });
 
 export const {
-  actions: { storeAccounts, toggleAccountFollowing },
+  actions: { toggleAccountFollowing, toggleAccountFavourite },
   reducer: accountReducer,
 } = accountSlice;
 

@@ -2,11 +2,12 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Shutter } from "../components/utility/Shutter";
 import { RootBottomTabNavigatorParams } from "../constants/types";
 import { Account } from "../screens/root-bottom-tabs/Account";
-import { HomeFeed } from "../screens/root-bottom-tabs/HomeFeed";
+import { Chat } from "../screens/root-bottom-tabs/Chat";
 import { Notification } from "../screens/root-bottom-tabs/Notification";
 import { ShortsFeed } from "../screens/root-bottom-tabs/ShortsFeed";
 import { VideoFeed } from "../screens/root-bottom-tabs/VideoFeed";
-import { UtilityStackNavigator } from "./UtilityStackNavigator";
+import { HomeStacks } from "./HomeStacks";
+import { SuggestedTabs } from "./SuggestedTabs";
 
 const Tab = createBottomTabNavigator<RootBottomTabNavigatorParams>();
 
@@ -15,30 +16,22 @@ export function RootBottomTabNavigatior() {
     <Tab.Navigator
       backBehavior="history"
       id="root-bottom-tab-navigator"
-      initialRouteName="HomeFeed"
+      initialRouteName="HomeStacks"
       detachInactiveScreens
-      screenOptions={{
-        headerShown: false,
-      }}
+      screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}
       tabBar={(props) => <Shutter {...props} />}
     >
       <Tab.Screen
-        name="HomeFeed"
-        component={HomeFeed}
-        getId={() => "home-feed"}
-        navigationKey="home-feed"
+        name="HomeStacks"
+        component={HomeStacks}
+        getId={() => "home-stacks"}
+        navigationKey="home-stacks"
       />
       <Tab.Screen
-        name="VideoFeed"
-        component={VideoFeed}
-        getId={() => "video-feed"}
-        navigationKey="video-feed"
-      />
-      <Tab.Screen
-        name="ShortsFeed"
-        component={ShortsFeed}
-        getId={() => "shorts-feed"}
-        navigationKey="shorts-feed"
+        name="SuggestedTabs"
+        component={SuggestedTabs}
+        getId={() => "suggested-tabs"}
+        navigationKey="suggested-tabs"
       />
       <Tab.Screen
         name="Notification"
@@ -47,16 +40,10 @@ export function RootBottomTabNavigatior() {
         navigationKey="notification"
       />
       <Tab.Screen
-        name="Account"
-        component={Account}
+        name="Chat"
+        component={Chat}
         getId={() => "account"}
         navigationKey="account"
-      />
-      <Tab.Screen
-        name="UtilityStacks"
-        component={UtilityStackNavigator}
-        getId={() => "utility-stack-navigator"}
-        navigationKey="utility-stack-navigator"
       />
     </Tab.Navigator>
   );

@@ -7,6 +7,7 @@ import {
   COLOR_19,
   COLOR_5,
   SIZE_1,
+  SIZE_12,
   SIZE_15,
   SIZE_17,
   SIZE_20,
@@ -19,19 +20,25 @@ const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 export type AppLoadingIndicatorProps = {
   style?: StyleProp<ViewStyle>;
+  transparent?: boolean;
+  size?: "small" | "large";
 };
 
-export function AppLoadingIndicator({ style }: AppLoadingIndicatorProps) {
+export function AppLoadingIndicator({
+  style,
+  transparent,
+  size,
+}: AppLoadingIndicatorProps) {
   const theme = useStoreSelector(selectAppTheme);
 
   const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
 
   let color = "";
 
-  if (theme === "light") {
-    color = COLOR_5;
-  } else {
+  if (theme === "dark" || transparent) {
     color = COLOR_19;
+  } else {
+    color = COLOR_5;
   }
 
   useEffect(() => {
@@ -46,9 +53,18 @@ export function AppLoadingIndicator({ style }: AppLoadingIndicatorProps) {
     ).start();
   }, []);
 
-  let indicatorSize = SIZE_21;
+  let indicatorSize = 0;
   let strokeSize = 4 * StyleSheet.hairlineWidth;
   let circumference = Math.PI * indicatorSize;
+
+  switch (size) {
+    case "small":
+      indicatorSize = SIZE_12;
+      break;
+    case "large":
+    default:
+      indicatorSize = SIZE_21;
+  }
 
   circumference = Math.PI * (indicatorSize - strokeSize);
 

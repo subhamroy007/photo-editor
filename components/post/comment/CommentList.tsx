@@ -1,179 +1,103 @@
-import { useCallback } from "react";
-import { FlatList, ListRenderItemInfo, Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCallback, useEffect, useState } from "react";
 import {
-  COLOR_5,
-  HEADER_HEIGHT,
-  SCREEN_HEIGHT,
-  SIZE_15,
-  SIZE_5,
-  SIZE_6,
-  SIZE_9,
-} from "../../../constants/constants";
+  FlatList,
+  LayoutAnimation,
+  ListRenderItemInfo,
+  View,
+} from "react-native";
+import { shallowEqual, useDispatch } from "react-redux";
+import { storeAccounts } from "../../../api/accounts/accountSlice";
+import { selectCommentIds } from "../../../api/post/postSelector";
+import { storeComments } from "../../../api/post/postSlice";
+import { useGetCommentsQuery } from "../../../api/storeApi";
+import { LAYOUT_ANIMATION_DURATION_MS } from "../../../constants/constants";
 import { globalStyles } from "../../../constants/style";
-import {
-  AccountResponse,
-  CommentListItemParams,
-  CommentResponse,
-} from "../../../constants/types";
-import { AppIcon } from "../../utility/AppIcon";
-import { AppLabel } from "../../utility/AppLabel";
-import { AppLoadingIndicator } from "../../utility/AppLoadingIndicator";
+import { AccountResponse } from "../../../constants/types";
+import { useStoreSelector } from "../../../hooks/useStoreSelector";
+import { Label } from "../../utility/Label";
 import { CommentListItem } from "./CommentListItem";
 
 export type CommentListProps = {
-  data: {
-    caption: string;
-    timestamp: number;
-    author: AccountResponse;
-    comments: CommentListItemParams[];
-    noOfComments: number;
-  } | null;
-  onLongPress: (commentId: string) => void;
-  onRetry: () => void;
-  isLoading: boolean;
-  isError: boolean;
-  hasMorePages: boolean;
+  id: string;
+  gotoHashtag: (name: string) => void;
+  gotoAccount: (userid: string) => void;
 };
 
 export function CommentList({
-  onLongPress,
-  hasMorePages,
-  isError,
-  isLoading,
-  onRetry,
-  data,
+  gotoAccount,
+  gotoHashtag,
+  id,
 }: CommentListProps) {
-  const { top } = useSafeAreaInsets();
+  const [commentState, setCommentState] = useState<{
+    offset: number;
+    timestamp: number;
+    skipRequest: boolean;
+  }>({
+    offset: 0,
+    timestamp: Date.now(),
+    skipRequest: false,
+  });
 
-  const renderComments = useCallback(
-    ({ item }: ListRenderItemInfo<CommentResponse>) => {
-      return (
-        <CommentListItem
-          comment={item}
-          onLongPress={onLongPress}
-          replyTo={() => {}}
-          readonly={false}
-        />
+  const {
+    isError: isCommentError,
+    isFetching: isCommentFetching,
+    isLoading: isCommentLoading,
+    isSuccess: isCommentSuccess,
+    refetch: retry,
+    currentData,
+  } = useGetCommentsQuery(
+    {
+      offset: commentState.offset,
+      postId: id,
+      timestamp: commentState.timestamp,
+    },
+    { skip: commentState.skipRequest, refetchOnMountOrArgChange: true }
+  );
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isCommentSuccess && currentData) {
+      LayoutAnimation.configureNext(
+        LayoutAnimation.create(LAYOUT_ANIMATION_DURATION_MS, "linear", "scaleY")
       );
-    },
-    []
-  );
+      setCommentState((prevState) => ({
+        ...prevState,
+        offset: prevState.offset + currentData.data.comments.length,
+        skipRequest: true,
+      }));
+      const accounts: AccountResponse[] = [];
 
-  const listEmpty = useCallback(() => {
-    return (
-      <View
-        style={[
-          globalStyles.alignCenter,
-          { marginTop: SCREEN_HEIGHT / 2 - top - HEADER_HEIGHT - SIZE_9 },
-        ]}
-      >
-        {isLoading ? (
-          <AppLoadingIndicator color={COLOR_5} />
-        ) : isError ? (
-          <Pressable hitSlop={SIZE_6} onPress={onRetry}>
-            <AppIcon
-              name="undo"
-              gap="medium"
-              foreground={COLOR_5}
-              borderVisible
-            />
-          </Pressable>
-        ) : null}
-      </View>
-    );
-  }, [isLoading, isError]);
+      currentData.data.comments.forEach((comment) => {
+        accounts.push(comment.author);
+        accounts.push(...comment.replies.map((reply) => reply.author));
+        dispatch(storeAccounts(accounts));
+        dispatch(storeComments(id, currentData.data.comments, false, true));
+      });
+    }
+  }, [isCommentSuccess, currentData]);
 
-  const listFooter = useCallback(() => {
-    return (
-      <View
-        style={[globalStyles.alignCenter, globalStyles.paddingVerticalSize7]}
-      >
-        {hasMorePages && data ? (
-          !isError ? (
-            <AppLoadingIndicator
-              color={COLOR_5}
-              style={globalStyles.marginBottomSize4}
-            />
-          ) : (
-            <Pressable
-              hitSlop={SIZE_6}
-              onPress={onRetry}
-              style={globalStyles.marginBottomSize4}
-            >
-              <AppIcon
-                name="undo"
-                gap="medium"
-                foreground={COLOR_5}
-                borderVisible
-              />
-            </Pressable>
-          )
-        ) : null}
-      </View>
-    );
-  }, [hasMorePages, isError, data]);
+  const getComments = useCallback((state) => selectCommentIds(state, id), [id]);
 
-  const getItemLayout = useCallback(
-    (data: CommentListItemParams[] | null | undefined, index: number) => {
-      const height = data
-        ? 3 * SIZE_5 + SIZE_6 + Math.max(data[index].contentHeight, SIZE_15)
-        : 0;
-      return {
-        index,
-        length: height,
-        offset: height * index,
-      };
-    },
-    []
-  );
+  const comments = useStoreSelector(getComments, shallowEqual);
 
-  const listHeader = useCallback(() => {
-    return data ? (
-      <View
-        style={[
-          globalStyles.primaryBottomBorderWidth,
-          globalStyles.primaryDarkBorderColor,
-        ]}
-      >
-        <CommentListItem
-          comment={{
-            author: data.author,
-            content: data.caption,
-            timestamp: data.timestamp,
-            id: "",
-            isLiked: false,
-            isReply: false,
-            noOfLikes: -1,
-            noOfReplies: -1,
-          }}
-          readonly
-        />
-        {data.noOfComments && (
-          <AppLabel
-            text={data.noOfComments + " Comments"}
-            foreground={COLOR_5}
-            size="medium"
-            gapVertical="small"
-            styleProp={globalStyles.marginBottomSize4}
-          />
-        )}
-      </View>
-    ) : null;
-  }, [data]);
+  const renderComments = useCallback(({ item }: ListRenderItemInfo<string>) => {
+    return <CommentListItem commentId={item} postId={id} />;
+  }, []);
 
   return (
     <FlatList
-      data={data?.comments}
-      renderItem={renderComments}
+      data={comments}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingTop: HEADER_HEIGHT }}
-      ListEmptyComponent={listEmpty}
-      ListFooterComponent={listFooter}
-      ListHeaderComponent={listHeader}
-      getItemLayout={getItemLayout}
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="always"
+      keyExtractor={(item) => item}
+      renderItem={renderComments}
+      overScrollMode="never"
+      ItemSeparatorComponent={() => (
+        <View style={globalStyles.marginBottomSize2} />
+      )}
+      contentContainerStyle={[globalStyles.paddingVerticalSize7]}
     />
   );
 }

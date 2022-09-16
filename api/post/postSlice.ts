@@ -1,13 +1,12 @@
 import {
   createEntityAdapter,
   createSlice,
+  EntityState,
   PayloadAction,
 } from "@reduxjs/toolkit";
-import {
-  CommentGlobalParams,
-  PostGlobalParams,
-  PostResponse,
-} from "../../constants/types";
+import { PostGlobalParams, PostResponse } from "../../constants/types";
+import { convertPosts } from "../../constants/utility";
+import { fetchFollowingFeed } from "./postThunk";
 
 const postAdapter = createEntityAdapter<PostGlobalParams>({
   selectId: (entity) => entity.id,
@@ -17,41 +16,6 @@ const postSlice = createSlice({
   name: "post-slice",
   initialState: postAdapter.getInitialState(),
   reducers: {
-    storePosts: {
-      prepare(posts: PostResponse[]) {
-        return { payload: posts };
-      },
-      reducer(state, { payload }: PayloadAction<PostResponse[]>) {
-        const result = payload.map<PostGlobalParams>((item) => {
-          const targetPost = state.entities[item.id];
-          return {
-            ...item,
-            comments:
-              targetPost && targetPost.comments.length > 0
-                ? targetPost.comments
-                : item.comments.map<CommentGlobalParams>((comment) => {
-                    return {
-                      ...comment,
-                      author: comment.author.id,
-                      replies: [],
-                    };
-                  }),
-            likes: item.likes.map((account) => account.id),
-            author: item.author.id,
-            accounts: item.accounts.map((account) => account.id),
-            moment: item.moment
-              ? {
-                  audio: item.moment.audio ? item.moment.audio.id : "",
-                  video: item.moment.video,
-                  filter: item.moment.filter ? item.moment.filter.id : "",
-                }
-              : null,
-          };
-        });
-
-        postAdapter.upsertMany(state, result);
-      },
-    },
     togglePostLike: {
       prepare(postId: string, setToLike: boolean = false) {
         return {
@@ -81,11 +45,42 @@ const postSlice = createSlice({
         }
       },
     },
+    togglePostSaved: {
+      prepare(postId: string) {
+        return {
+          payload: postId,
+        };
+      },
+      reducer(state, { payload: postId }: PayloadAction<string>) {
+        const targetPost = state.entities[postId];
+        if (targetPost) {
+          targetPost.isSaved = !targetPost.isSaved;
+        }
+      },
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(
+      fetchFollowingFeed.fulfilled,
+      (
+        state,
+        {
+          payload: {
+            data: { posts },
+          },
+        }
+      ) => {
+        postAdapter.upsertMany(
+          state,
+          convertPosts(posts.map((item) => item.data))
+        );
+      }
+    );
   },
 });
 
 export const {
-  actions: { storePosts, togglePostLike },
+  actions: { togglePostLike, togglePostSaved },
   reducer: postReducer,
 } = postSlice;
 

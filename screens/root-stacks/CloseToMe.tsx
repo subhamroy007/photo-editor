@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppLabel } from "../../components/utility/AppLabel";
+import { Label } from "../../components/utility/Label";
 import { globalStyles } from "../../constants/style";
 
 export function CloseToMe() {
@@ -8,7 +8,7 @@ export function CloseToMe() {
       edges={["bottom", "left", "right", "top"]}
       style={[globalStyles.flex1, globalStyles.primaryLightBackgroundColor]}
     >
-      <AppLabel size="extra-large" text="Close To Me" />
+      <Label size="extra-large" text="Close To Me" />
     </SafeAreaView>
   );
 }

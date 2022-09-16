@@ -1,47 +1,59 @@
-import { useCallback } from "react";
+import { AccountShortResponse } from "../../../constants/types";
 import { FlatList, ListRenderItemInfo } from "react-native";
-import { SIZE_15, SIZE_5 } from "../../../constants/constants";
-import { AccountResponse } from "../../../constants/types";
+import { useCallback } from "react";
 import { AccountShortListItem } from "./AccountShortListItem";
+import { SIZE_12, SIZE_21, SIZE_8 } from "../../../constants/constants";
 
 export type AccountShortListProps = {
-  onSelect: (accountId: string) => void;
-  accounts: AccountResponse[];
+  accounts: AccountShortResponse[];
+  transparent?: boolean;
+  onSelect: (userid: string) => void;
 };
 
 export function AccountShortList({
   accounts,
   onSelect,
+  transparent,
 }: AccountShortListProps) {
-  const renderAccount = useCallback(
-    ({ item }: ListRenderItemInfo<AccountResponse>) => {
+  const renderAccounts = useCallback(
+    ({ item }: ListRenderItemInfo<AccountShortResponse>) => {
       return (
         <AccountShortListItem
-          account={item}
-          onSelect={() => {
-            onSelect(item.userid);
-          }}
+          {...item}
+          transparent={transparent}
+          onSelect={onSelect}
         />
       );
     },
     []
   );
 
+  const getAccountLayout = useCallback(
+    (data: AccountShortResponse[] | null | undefined, index: number) => {
+      const length = SIZE_8 * 2 + SIZE_21;
+      return {
+        index,
+        length,
+        offset: length * index,
+      };
+    },
+    []
+  );
+
+  const keyExtractor = useCallback(
+    (item: AccountShortResponse, index: number) => {
+      return item.userid;
+    },
+    []
+  );
+
   return (
     <FlatList
-      showsVerticalScrollIndicator={false}
-      keyboardDismissMode="none"
-      keyboardShouldPersistTaps="always"
       data={accounts}
-      renderItem={renderAccount}
-      getItemLayout={(_, index) => {
-        const size = 2 * SIZE_5 + SIZE_15;
-        return {
-          index,
-          length: size,
-          offset: index * size,
-        };
-      }}
+      keyExtractor={keyExtractor}
+      showsVerticalScrollIndicator={false}
+      renderItem={renderAccounts}
+      // getItemLayout={getAccountLayout}
     />
   );
 }

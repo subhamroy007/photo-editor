@@ -8,11 +8,13 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { selectAppTheme } from "../../api/global/appSelector";
 import {
   DOUBLE_TAP_DURATION_MS,
   LONG_PRESS_DURATION_MS,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
+import { useStoreSelector } from "../../hooks/useStoreSelector";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -28,6 +30,7 @@ export type AppPressableProps = {
   style?: StyleProp<ViewStyle>;
   type?: "overlay" | "underlay" | "animated";
   animatedStyle?: Animated.WithAnimatedObject<ViewStyle>;
+  transparent?: boolean;
 };
 
 export function AppPressable({
@@ -42,7 +45,10 @@ export function AppPressable({
   style,
   type,
   animatedStyle,
+  transparent,
 }: AppPressableProps) {
+  const theme = useStoreSelector(selectAppTheme);
+
   const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
 
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
@@ -145,9 +151,14 @@ export function AppPressable({
         <View
           style={[
             style,
-            { width, height },
+            {
+              width,
+              height,
+            },
+            theme === "dark" || transparent
+              ? globalStyles.secondaryDarkBackgroundColor
+              : globalStyles.secondaryLightBackgroundColor,
             globalStyles.absolutePosition,
-            globalStyles.secondaryLightBackgroundColor,
           ]}
         />
       )}

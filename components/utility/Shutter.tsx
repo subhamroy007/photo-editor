@@ -1,22 +1,17 @@
+import { useKeyboard } from "@react-native-community/hooks";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useCallback, useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
+import { Animated, Easing, Pressable, StyleSheet } from "react-native";
+import { selectAppTheme } from "../../api/global/appSelector";
 import {
-  selectAppTheme,
-  selectFullScreenActiveState,
-  selectProfilePicuture,
-} from "../../api/global/appSelector";
-import {
-  COLOR_7,
-  COLOR_8,
+  MODAL_ANIMATION_DURATION_MS,
   SIZE_5,
-  SIZE_9,
+  SIZE_6,
   TAB_BAR_HEIGHT,
 } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { useStoreSelector } from "../../hooks/useStoreSelector";
-import { AppIcon } from "./AppIcon";
-import { AppModal } from "./AppModal";
+import { Icon } from "./Icon";
 
 export function Shutter(props: BottomTabBarProps) {
   const {
@@ -24,30 +19,20 @@ export function Shutter(props: BottomTabBarProps) {
     navigation,
   } = props;
 
-  const isFullScreenActive = useStoreSelector(selectFullScreenActiveState);
+  const animatedValue = useRef<Animated.Value>(new Animated.Value(0)).current;
+
+  let isFullScreenActive = false;
+  if (index === 1) {
+    isFullScreenActive = true;
+  }
+
+  const isBottomTabBarHidden = false;
 
   const theme = useStoreSelector(selectAppTheme);
 
-  const profilePicture = useStoreSelector(selectProfilePicuture);
-
-  const [isModalVisible, setModalVisible] = useState(false);
-
-  const toggleModalVisibleState = useCallback(
-    () => setModalVisible((prevState) => !prevState),
-    []
-  );
-
   const navigateTo = useCallback(
     (screen: string) => {
-      if (
-        screen === "CreateContent" ||
-        screen === "Chat" ||
-        screen === "CloseToMe"
-      ) {
-        navigation.getParent("root-stack-navigator")?.navigate(screen);
-      } else {
-        navigation.navigate("UtilityStacks", { screen });
-      }
+      navigation.navigate(screen);
     },
     [navigation]
   );
@@ -70,169 +55,107 @@ export function Shutter(props: BottomTabBarProps) {
     [navigation, index, routes]
   );
 
+  const { keyboardShown } = useKeyboard();
+
+  useEffect(() => {
+    switchPostion(!(keyboardShown || isBottomTabBarHidden));
+  }, [keyboardShown, isBottomTabBarHidden]);
+
+  const switchPostion = useCallback((visible: boolean) => {
+    Animated.timing(animatedValue, {
+      toValue: visible ? 0 : 1,
+      useNativeDriver: true,
+      duration: MODAL_ANIMATION_DURATION_MS,
+      easing: Easing.linear,
+      isInteraction: false,
+    }).start();
+  }, []);
+
   return (
-    <View
+    <Animated.View
       style={[
+        isFullScreenActive ? globalStyles.absolutePosition : undefined,
         globalStyles.flexRow,
+        globalStyles.justifyAround,
+        globalStyles.alignCenter,
         isFullScreenActive
-          ? globalStyles.semiTransparentBackgroundColor1
+          ? globalStyles.semiTransparentBackgroundColor
           : theme === "light"
           ? globalStyles.primaryLightBackgroundColor
           : globalStyles.primaryDarkBackgroundColor,
+        isFullScreenActive ? undefined : globalStyles.primaryTopBorderWidth,
+        isFullScreenActive || theme === "dark"
+          ? globalStyles.primaryDarkBorderColor
+          : globalStyles.primaryLightBorderColor,
         styles.tabBar,
+        {
+          transform: [
+            {
+              translateY: animatedValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, TAB_BAR_HEIGHT],
+                extrapolate: "clamp",
+              }),
+            },
+          ],
+        },
       ]}
     >
       <Pressable
         onPress={() => {
           emitEvent(0);
         }}
+        hitSlop={{ bottom: SIZE_5, top: SIZE_5, left: SIZE_6, right: SIZE_6 }}
         android_disableSound
-        style={[
-          globalStyles.flex1,
-          globalStyles.justifyCenter,
-          globalStyles.alignCenter,
-        ]}
       >
-        <AppIcon
+        <Icon
           name={index === 0 ? "home-solid" : "home-outline"}
-          foreground={isFullScreenActive ? COLOR_8 : undefined}
+          transparent={isFullScreenActive}
         />
       </Pressable>
       <Pressable
+        hitSlop={{ bottom: SIZE_5, top: SIZE_5, left: SIZE_6, right: SIZE_6 }}
         onPress={() => {
           emitEvent(1);
         }}
         android_disableSound
-        style={[
-          globalStyles.flex1,
-          globalStyles.justifyCenter,
-          globalStyles.alignCenter,
-        ]}
       >
-        <AppIcon
-          name={index === 1 ? "video-solid" : "video-outline"}
-          foreground={isFullScreenActive ? COLOR_8 : undefined}
+        <Icon
+          name={index === 1 ? "heart-solid" : "heart-outline"}
+          transparent={isFullScreenActive}
         />
       </Pressable>
+
       <Pressable
-        onPress={() => {
-          emitEvent(2);
-        }}
         android_disableSound
-        style={[
-          globalStyles.flex1,
-          globalStyles.justifyCenter,
-          globalStyles.alignCenter,
-        ]}
+        hitSlop={{ bottom: SIZE_5, top: SIZE_5, left: SIZE_6, right: SIZE_6 }}
       >
-        <AppIcon
-          name={index === 0 ? "shorts" : "shorts"}
-          foreground={isFullScreenActive ? COLOR_8 : undefined}
-        />
+        <Icon name="create" transparent={isFullScreenActive} />
       </Pressable>
       <Pressable
+        hitSlop={{ bottom: SIZE_5, top: SIZE_5, left: SIZE_6, right: SIZE_6 }}
         onPress={() => {
           emitEvent(3);
         }}
-        style={[
-          globalStyles.flex1,
-          globalStyles.justifyCenter,
-          globalStyles.alignCenter,
-        ]}
       >
-        <AppIcon
-          name={index === 3 ? "notification-solid" : "notification-outline"}
-          foreground={isFullScreenActive ? COLOR_8 : undefined}
+        <Icon
+          name={index === 3 ? "search-solid" : "search-regular"}
+          transparent={isFullScreenActive}
         />
       </Pressable>
       <Pressable
-        onPress={() => {
-          emitEvent(4);
-        }}
-        android_disableSound
-        style={[
-          globalStyles.flex1,
-          globalStyles.justifyCenter,
-          globalStyles.alignCenter,
-          {
-            borderWidth: index === 4 ? StyleSheet.hairlineWidth * 4 : 0,
-            borderColor: theme === "light" ? COLOR_7 : COLOR_8,
-            borderRadius: SIZE_5 + StyleSheet.hairlineWidth * 4,
-          },
-        ]}
+        hitSlop={{ bottom: SIZE_5, top: SIZE_5, left: SIZE_6, right: SIZE_6 }}
+        onPress={() => {}}
       >
-        <Image
-          resizeMode="cover"
-          style={{
-            width: SIZE_9,
-            height: SIZE_9,
-            borderRadius: SIZE_5,
-          }}
-          fadeDuration={0}
-          source={profilePicture}
-        />
+        <Icon name={"comment"} transparent={isFullScreenActive} />
       </Pressable>
-      <Pressable
-        onPress={toggleModalVisibleState}
-        android_disableSound
-        style={[
-          globalStyles.flex1,
-          globalStyles.justifyCenter,
-          globalStyles.alignCenter,
-        ]}
-      >
-        <AppIcon
-          name="filter"
-          foreground={isFullScreenActive ? COLOR_8 : undefined}
-        />
-      </Pressable>
-      <AppModal
-        isVisible={isModalVisible}
-        onDismiss={toggleModalVisibleState}
-        grids={{
-          size: "large",
-          list: [
-            {
-              label: "Close To Me",
-              name: "following",
-              onPress: () => navigateTo("CloseToMe"),
-            },
-            {
-              label: "Chat",
-              name: "message-outline",
-              onPress: () => navigateTo("Chat"),
-            },
-            {
-              label: "Create",
-              name: "create",
-              onPress: () => navigateTo("CreateContent"),
-            },
-            {
-              label: "Settings",
-              name: "settings-outline",
-              onPress: () => navigateTo("Settings"),
-            },
-            {
-              label: "Saved",
-              name: "bookmark-outline",
-              onPress: () => navigateTo("Saved"),
-            },
-            {
-              label: "Favourite",
-              name: "favourite",
-              onPress: () => navigateTo("Favourite"),
-            },
-          ],
-        }}
-      />
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
     height: TAB_BAR_HEIGHT,
-    position: "absolute",
     width: "100%",
     bottom: 0,
     left: 0,

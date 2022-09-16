@@ -1,16 +1,16 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { IMAGE_POSTS, MOMENTS_POSTS, VIDEO_POSTS } from "../constants/data";
 import {
   AccountResponse,
   CommentResponse,
   PostResponse,
   StoryResponse,
 } from "../constants/types";
-import { COMMENT_RESPONSE, ACCOUNT_DATA, POST_DATA } from "../constants/data";
 import { delay } from "../constants/utility";
 
 export type CommentScreenApiResponse = {
   data: {
-    post: CommentResponse | null;
+    noOfComments: number;
     comments: CommentResponse[];
   };
 };
@@ -41,43 +41,18 @@ export const storeApi = createApi({
   keepUnusedDataFor: 0,
 
   endpoints: (build) => ({
-    getComments: build.query<CommentScreenApiResponse, string>({
-      queryFn: async (postId) => {
+    getComments: build.query<
+      CommentScreenApiResponse,
+      { postId: string; offset: number; timestamp: number }
+    >({
+      queryFn: async ({ offset, postId, timestamp }) => {
         await delay(3000);
 
         return {
           data: {
             data: {
-              post: {
-                author: ACCOUNT_DATA[0],
-                content: "this is a great post",
-                id: postId,
-                isLiked: false,
-                noOfLikes: 0,
-                noOfReplies: 0,
-                timestamp: Date.now(),
-                replies: [],
-              },
-              comments: COMMENT_RESPONSE,
-            },
-          },
-        };
-      },
-    }),
-    getStories: build.query<StoryApiResponse, string>({
-      queryFn: async (userid) => {
-        console.log("fetching");
-        await delay(3000);
-        const targetAccount = ACCOUNT_DATA.find(
-          (item) => item.userid === userid
-        )!;
-        const stories: StoryResponse[] = [];
-
-        return {
-          data: {
-            data: {
-              account: targetAccount,
-              stories,
+              noOfComments: 67,
+              comments: [],
             },
           },
         };
@@ -91,7 +66,17 @@ export const storeApi = createApi({
         return {
           data: {
             data: {
-              posts: POST_DATA,
+              posts: [
+                IMAGE_POSTS[0],
+                IMAGE_POSTS[1],
+                MOMENTS_POSTS[0],
+                IMAGE_POSTS[2],
+                MOMENTS_POSTS[1],
+                VIDEO_POSTS[0],
+                MOMENTS_POSTS[2],
+                IMAGE_POSTS[3],
+                MOMENTS_POSTS[3],
+              ],
             },
           },
         };
@@ -106,7 +91,7 @@ export const storeApi = createApi({
         return {
           data: {
             data: {
-              likes: ACCOUNT_DATA,
+              likes: [],
               noOfLikes: 678475,
             },
           },
@@ -118,7 +103,6 @@ export const storeApi = createApi({
 
 export const {
   useGetCommentsQuery,
-  useGetStoriesQuery,
   useGetHomeFeedQuery,
   useGetPostLikesQuery,
 } = storeApi;

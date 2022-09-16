@@ -4,8 +4,8 @@ import { COLOR_5 } from "../../../constants/constants";
 import { globalStyles } from "../../../constants/style";
 import { HashtagResponse } from "../../../constants/types";
 import { getCountString } from "../../../constants/utility";
-import { AppIcon } from "../../utility/AppIcon";
-import { AppLabel } from "../../utility/AppLabel";
+import { Icon } from "../../utility/Icon";
+import { Label } from "../../utility/Label";
 import { AppPressable } from "../../utility/AppPressable";
 
 export type HashtagShortListItemProps = {
@@ -27,7 +27,7 @@ export const HashtagShortListItem = React.memo<HashtagShortListItemProps>(
         ]}
         onPress={onSelect}
       >
-        <AppIcon name="hashtag" borderVisible gap="medium" size="small" />
+        <Icon name="hashtag" borderVisible gap="medium" size="small" />
         <View
           style={[
             globalStyles.marginLeftSize4,
@@ -36,8 +36,8 @@ export const HashtagShortListItem = React.memo<HashtagShortListItemProps>(
             globalStyles.flex1,
           ]}
         >
-          <AppLabel text={hashtag.hashtag} styleProp={{ maxWidth: "100%" }} />
-          <AppLabel
+          <Label text={hashtag.hashtag} styleProp={{ maxWidth: "100%" }} />
+          <Label
             text={getCountString(hashtag.noOfPosts)}
             styleProp={[{ maxWidth: "100%" }, globalStyles.marginTopSize2]}
             foreground={COLOR_5}

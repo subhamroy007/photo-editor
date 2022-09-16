@@ -26,6 +26,30 @@ export const selectDefaultProfilePicuture = createDraftSafeSelector<
   }
 );
 
+export const selectLogo = createDraftSafeSelector<
+  [(state: StoreRootState) => MediaParams],
+  MediaParams
+>(
+  (state) => {
+    return state.app.logo;
+  },
+  (arg0) => {
+    return arg0;
+  }
+);
+
+export const selectMuteState = createDraftSafeSelector<
+  [(state: StoreRootState) => boolean],
+  boolean
+>(
+  (state) => {
+    return state.app.mute;
+  },
+  (arg0) => {
+    return arg0;
+  }
+);
+
 export const selectAccountId = createDraftSafeSelector<
   [(state: StoreRootState) => string],
   string
@@ -38,36 +62,24 @@ export const selectAccountId = createDraftSafeSelector<
   }
 );
 
-export const selectMuteState = createDraftSafeSelector<
-  [(state: StoreRootState) => boolean],
-  boolean
->(
-  (state) => {
-    return state.app.isMuted;
-  },
-  (arg0) => {
-    return arg0;
-  }
-);
-
-export const selectFullScreenActiveState = createDraftSafeSelector<
-  [(state: StoreRootState) => boolean],
-  boolean
->(
-  (state) => {
-    return state.app.isFullScreenActive;
-  },
-  (arg0) => {
-    return arg0;
-  }
-);
-
 export const selectAppTheme = createDraftSafeSelector<
   [(state: StoreRootState) => AppThemeTypes],
   AppThemeTypes
 >(
   (state) => {
     return state.app.theme;
+  },
+  (arg0) => {
+    return arg0;
+  }
+);
+
+export const selectIcon = createDraftSafeSelector<
+  [(state: StoreRootState, name: string) => string],
+  string
+>(
+  (state, name) => {
+    return state.app.icons[name];
   },
   (arg0) => {
     return arg0;

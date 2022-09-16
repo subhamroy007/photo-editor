@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { ReactNode } from "react";
 import {
   Pressable,
   StyleProp,
@@ -6,20 +6,19 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { selectAppTheme } from "../../api/global/appSelector";
 import { COLOR_8, HEADER_HEIGHT } from "../../constants/constants";
 import { globalStyles } from "../../constants/style";
 import { IconName } from "../../constants/types";
 import { useStoreSelector } from "../../hooks/useStoreSelector";
-import { AppIcon } from "./AppIcon";
-import { AppLabel } from "./AppLabel";
+import { Icon } from "./Icon";
+import { Label } from "./Label";
 
 export type AppHeader = {
   style?: StyleProp<ViewStyle>;
-  LeftNode?: () => ReactElement;
-  RightNode?: () => ReactElement;
-  TitleNode?: () => ReactElement;
+  leftnode?: ReactNode;
+  rightnode?: ReactNode;
+  titlenode?: ReactNode;
   leftIcon?: IconName;
   rightIcon?: IconName;
   title?: string;
@@ -33,9 +32,9 @@ export function AppHeader({
   title,
   leftIcon,
   rightIcon,
-  LeftNode,
-  RightNode,
-  TitleNode,
+  leftnode,
+  rightnode,
+  titlenode,
   onLeftIconPress,
   onRightIconPress,
   transparent,
@@ -43,102 +42,81 @@ export function AppHeader({
   const theme = useStoreSelector(selectAppTheme);
 
   return (
-    <SafeAreaView
-      edges={["top", "left", "right"]}
+    <View
       style={[
-        styles.headerWrapper,
+        style,
+        globalStyles.flexRow,
+        styles.header,
+        globalStyles.paddingHorizontalSize4,
+        globalStyles.alignCenter,
         transparent
           ? undefined
           : theme === "light"
           ? globalStyles.primaryLightBackgroundColor
           : globalStyles.primaryDarkBackgroundColor,
-        globalStyles.absolutePosition,
-        style,
+        transparent || theme === "dark"
+          ? globalStyles.primaryDarkBorderColor
+          : globalStyles.primaryLightBorderColor,
+        transparent ? undefined : globalStyles.primaryBottomBorderWidth,
       ]}
     >
-      <View
-        style={[
-          globalStyles.flexRow,
-          styles.header,
-          globalStyles.paddingHorizontalSize4,
-          globalStyles.alignCenter,
-        ]}
-      >
-        {leftIcon && (
-          <Pressable android_disableSound onPress={onLeftIconPress}>
-            <AppIcon
-              name={leftIcon}
-              foreground={transparent ? COLOR_8 : undefined}
-            />
-          </Pressable>
-        )}
-        {LeftNode && (
-          <View style={[globalStyles.flexRow]}>
-            <LeftNode />
-          </View>
-        )}
-        {title && (
-          <AppLabel
-            text={title}
-            size="extra-large"
-            style="bold"
-            styleProp={[globalStyles.flex1, globalStyles.marginLeftSize7]}
+      {leftIcon && (
+        <Pressable
+          android_disableSound
+          onPress={onLeftIconPress}
+          style={globalStyles.marginRightSize7}
+        >
+          <Icon
+            name={leftIcon}
             foreground={transparent ? COLOR_8 : undefined}
-            alignment="left"
           />
-        )}
-        {TitleNode && (
-          <View
-            style={[
-              globalStyles.flex1,
-              globalStyles.marginLeftSize7,
-              globalStyles.flexRow,
-            ]}
-          >
-            <TitleNode />
-          </View>
-        )}
-        {rightIcon && (
-          <Pressable
-            style={[
-              {
-                marginLeft: "auto",
-              },
-              globalStyles.marginLeftSize7,
-            ]}
-            android_disableSound
-            onPress={onRightIconPress}
-          >
-            <AppIcon
-              name={rightIcon}
-              foreground={transparent ? COLOR_8 : undefined}
-            />
-          </Pressable>
-        )}
-        {RightNode && (
-          <View
-            style={[
-              globalStyles.marginLeftSize7,
-              globalStyles.flexRow,
-              { marginLeft: "auto" },
-            ]}
-          >
-            <RightNode />
-          </View>
-        )}
-      </View>
-    </SafeAreaView>
+        </Pressable>
+      )}
+      {leftnode && (
+        <View style={[globalStyles.flexRow, globalStyles.marginRightSize7]}>
+          {leftnode}
+        </View>
+      )}
+      {title && <Label text={title} size="large" transparent={transparent} />}
+      {titlenode && (
+        <View style={[globalStyles.flexRow, globalStyles.alignCenter]}>
+          {titlenode}
+        </View>
+      )}
+      {rightIcon && (
+        <Pressable
+          style={[
+            {
+              marginLeft: "auto",
+            },
+            globalStyles.marginRightSize4,
+          ]}
+          android_disableSound
+          onPress={onRightIconPress}
+        >
+          <Icon
+            name={rightIcon}
+            foreground={transparent ? COLOR_8 : undefined}
+          />
+        </Pressable>
+      )}
+      {rightnode && (
+        <View
+          style={[
+            globalStyles.flexRow,
+            globalStyles.alignCenter,
+            { marginLeft: "auto" },
+          ]}
+        >
+          {rightnode}
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
     height: HEADER_HEIGHT,
-  },
-  headerWrapper: {
-    left: 0,
-    right: 0,
-    top: 0,
-    width: "100%",
   },
 });

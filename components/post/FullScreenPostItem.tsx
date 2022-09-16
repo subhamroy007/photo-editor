@@ -1,8 +1,11 @@
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import {
+  CompositeScreenProps,
   useFocusEffect,
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -33,7 +36,9 @@ import {
 import { globalStyles } from "../../constants/style";
 import {
   PostItemProps,
+  RootBottomTabNavigatorParams,
   RootBotttomTabsNavigationProp,
+  RootStackNavigatorParams,
 } from "../../constants/types";
 import { getCountString, getDurationString } from "../../constants/utility";
 import { useFadeAnimation } from "../../hooks/useFadeAnimation";
@@ -41,9 +46,9 @@ import { useScaleUpAnimation } from "../../hooks/useScaleUpAnimation";
 import { useSpringAnimation } from "../../hooks/useSpringAnimation";
 import { useStoreDispatch } from "../../hooks/useStoreDispatch";
 import { useStoreSelector } from "../../hooks/useStoreSelector";
-import { AppAvatar } from "../utility/AppAvatar";
-import { AppIcon } from "../utility/AppIcon";
-import { AppLabel } from "../utility/AppLabel";
+import { Avatar } from "../utility/Avatar";
+import { Icon } from "../utility/Icon";
+import { Label } from "../utility/Label";
 import { AppPressable } from "../utility/AppPressable";
 import { HighlightedText } from "../utility/HighlightedText";
 import { Poster } from "../utility/Poster";
@@ -123,7 +128,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
 
     const navigateToAccount = useCallback(
       (userid: string) => {
-        navigation.navigate("BottomTabs", {
+        navigation.push("BottomTabs", {
           screen: "UtilityStacks",
           params: { screen: "Profile", params: { userid } },
         });
@@ -141,7 +146,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
 
     const onLocationPress = useCallback(() => {
       if (post.location !== "") {
-        navigation.navigate("BottomTabs", {
+        navigation.push("BottomTabs", {
           screen: "UtilityStacks",
           params: { screen: "Location", params: { locationId: post.location } },
         });
@@ -161,7 +166,10 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
 
     const onLikeCountPress = useCallback(() => {
       startFadeAnimation(false);
-      navigation.navigate("LikesScreen", { id: postId, type: "post" });
+      navigation.push("BottomTabs", {
+        screen: "UtilityStacks",
+        params: { screen: "LikesScreen", params: { id: postId, type: "post" } },
+      });
     }, [navigation, postId]);
 
     const onShareIconPress = useCallback(() => {
@@ -169,7 +177,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
     }, []);
 
     const onAudioPress = useCallback(() => {
-      navigation.navigate("BottomTabs", {
+      navigation.push("BottomTabs", {
         screen: "UtilityStacks",
         params: {
           screen: "Audio",
@@ -179,7 +187,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
     }, [post.moment?.audio]);
 
     const onFilterPress = useCallback(() => {
-      navigation.navigate("BottomTabs", {
+      navigation.push("BottomTabs", {
         screen: "UtilityStacks",
         params: {
           screen: "Effect",
@@ -245,7 +253,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
             scaleUpAnimationStyle,
           ]}
         >
-          <AppIcon
+          <Icon
             name="heart-solid"
             backgroundVisible
             background={COLOR_11}
@@ -264,14 +272,14 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
           ]}
         >
           {post.type === "photo" && (
-            <AppLabel
+            <Label
               text={`${offsetOrPosition + 1}/${post.photo!.photos.length}`}
               size="medium"
               foreground={COLOR_8}
             />
           )}
           {post.type === "video" && (
-            <AppLabel
+            <Label
               text={getDurationString(post.video!.duration - offsetOrPosition)}
               size="medium"
               foreground={COLOR_8}
@@ -299,7 +307,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
               }}
               animatedStyle={springAnimationStyle}
             >
-              <AppIcon
+              <Icon
                 name={post.isLiked ? "heart-solid" : "heart-outline"}
                 foreground={post.isLiked ? COLOR_10 : COLOR_8}
               />
@@ -316,7 +324,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
                   bottom: SIZE_5,
                 }}
               >
-                <AppLabel
+                <Label
                   text={getCountString(post.noOfLikes)}
                   foreground={COLOR_8}
                   style="regular"
@@ -335,9 +343,9 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
             }}
             style={[globalStyles.alignCenter, globalStyles.marginTopSize7]}
           >
-            <AppIcon name="comment-outline" foreground={COLOR_8} />
+            <Icon name="comment-outline" foreground={COLOR_8} />
             {post.noOfComments > 0 && (
-              <AppLabel
+              <Label
                 text={getCountString(post.noOfComments)}
                 foreground={COLOR_8}
                 style="regular"
@@ -356,7 +364,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
             }}
             style={[globalStyles.alignCenter, globalStyles.marginTopSize7]}
           >
-            <AppIcon name="share-outline" foreground={COLOR_8} />
+            <Icon name="share-outline" foreground={COLOR_8} />
           </Pressable>
           <Pressable
             android_disableSound
@@ -373,7 +381,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
               globalStyles.marginBottomSize7,
             ]}
           >
-            <AppIcon name="info" foreground={COLOR_8} />
+            <Icon name="info" foreground={COLOR_8} />
           </Pressable>
           {post.type === "moment" && post.moment?.audio && (
             <Pressable
@@ -390,7 +398,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
               style={globalStyles.marginTopSize7}
               onPress={onMaximizeIconPress}
             >
-              <AppIcon
+              <Icon
                 name="maximize"
                 gap="small"
                 foreground={COLOR_8}
@@ -402,7 +410,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
         <Pressable
           style={[
             StyleSheet.absoluteFill,
-            globalStyles.semiTransparentBackgroundColor2,
+            globalStyles.semiTransparentBackgroundColor,
             {
               zIndex: isCaptionExpanded ? undefined : -100,
             },
@@ -420,7 +428,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
           ]}
         >
           {post.noOfViews > 0 && (
-            <AppLabel
+            <Label
               text={getCountString(post.noOfViews) + " views"}
               foreground={COLOR_8}
               styleProp={[
@@ -430,7 +438,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
             />
           )}
           {post.type === "video" && (
-            <AppLabel
+            <Label
               text={post.video!.title}
               foreground={COLOR_8}
               noOfLines={4}
@@ -440,14 +448,14 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
           )}
           <View style={[globalStyles.flexRow, globalStyles.alignCenter]}>
             <Pressable android_disableSound onPress={onAuthorIdPress}>
-              <AppAvatar image={post.author.profilePicture} transparent />
+              <Avatar image={post.author.profilePicture} transparent />
             </Pressable>
             <Pressable
               style={[[globalStyles.marginLeftSize2, { maxWidth: "60%" }]]}
               android_disableSound
               onPress={onAuthorIdPress}
             >
-              <AppLabel text={post.author.userid} foreground={COLOR_8} />
+              <Label text={post.author.userid} foreground={COLOR_8} />
             </Pressable>
             {showFollowButton && (
               <Pressable
@@ -455,7 +463,7 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
                 android_disableSound
                 onPress={onFollowButtonPress}
               >
-                <AppLabel
+                <Label
                   text={post.author.isFollowing ? "following" : "follow"}
                   foreground={COLOR_8}
                   size="extra-small"
@@ -499,12 +507,12 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
                     globalStyles.marginRightSize4,
                   ]}
                 >
-                  <AppIcon
+                  <Icon
                     name="location"
                     size="extra-small"
                     foreground={COLOR_8}
                   />
-                  <AppLabel
+                  <Label
                     text={post.location}
                     style="regular"
                     styleProp={[
@@ -526,12 +534,12 @@ export const FullScreenPostItem = React.memo<PostItemProps>(
                   ]}
                   onPress={onTagPress}
                 >
-                  <AppIcon
+                  <Icon
                     name="tag-regular"
                     foreground={COLOR_8}
                     size="extra-small"
                   />
-                  <AppLabel
+                  <Label
                     text={
                       typeof post.accounts === "number"
                         ? post.accounts + " accounts"

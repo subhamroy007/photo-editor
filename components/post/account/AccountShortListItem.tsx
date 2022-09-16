@@ -1,60 +1,47 @@
-import React from "react";
-import { View } from "react-native";
-import { shallowEqual } from "react-redux";
-import { selectProfilePicuture } from "../../../api/global/appSelector";
-import { COLOR_5 } from "../../../constants/constants";
+import React, { useCallback } from "react";
+import { StyleSheet, View } from "react-native";
 import { globalStyles } from "../../../constants/style";
-import { AccountResponse } from "../../../constants/types";
 import { useStoreSelector } from "../../../hooks/useStoreSelector";
-import { AppAvatar } from "../../utility/AppAvatar";
-import { AppLabel } from "../../utility/AppLabel";
+import { Avatar } from "../../utility/Avatar";
+import { Label } from "../../utility/Label";
 import { AppPressable } from "../../utility/AppPressable";
+import { AccountShortResponse } from "../../../constants/types";
 
 export type AccountShortListItemProps = {
-  account: AccountResponse;
-  onSelect: () => void;
-};
+  onSelect: (userid: string) => void;
+  transparent?: boolean;
+} & AccountShortResponse;
 
 export const AccountShortListItem = React.memo<AccountShortListItemProps>(
-  (props) => {
-    const profilePicture = useStoreSelector(
-      selectProfilePicuture,
-      shallowEqual
-    );
-
-    const { account, onSelect } = props;
+  ({ onSelect, transparent, profilePicture, userid, username }) => {
+    const onPress = useCallback(() => {
+      onSelect(userid);
+    }, []);
 
     return (
       <AppPressable
+        transparent={transparent}
+        onPress={onPress}
         type="underlay"
         style={[
-          globalStyles.flexRow,
-          globalStyles.paddingVerticalSize2,
           globalStyles.paddingHorizontalSize4,
+          globalStyles.paddingVerticalSize3,
+          globalStyles.alignCenter,
+          globalStyles.flexRow,
         ]}
-        onPress={onSelect}
       >
-        <AppAvatar
-          image={
-            account.profilePicture
-              ? account.profilePicture.small
-              : profilePicture
-          }
+        <Avatar
+          image={profilePicture}
+          transparent={transparent}
           size="medium"
         />
-        <View
-          style={[
-            globalStyles.marginLeftSize4,
-            globalStyles.alignStart,
-            globalStyles.justifyCenter,
-            globalStyles.flex1,
-          ]}
-        >
-          <AppLabel text={account.userid} styleProp={{ maxWidth: "100%" }} />
-          <AppLabel
-            text={account.username}
-            styleProp={[{ maxWidth: "100%" }, globalStyles.marginTopSize2]}
-            foreground={COLOR_5}
+        <View style={[globalStyles.marginLeftSize4, globalStyles.alignStart]}>
+          <Label text={userid} transparent={transparent} />
+          <Label
+            text={username}
+            transparent={transparent}
+            type="info"
+            styleProp={globalStyles.marginTopSize1}
           />
         </View>
       </AppPressable>
@@ -62,3 +49,9 @@ export const AccountShortListItem = React.memo<AccountShortListItemProps>(
   },
   () => true
 );
+
+const styles = StyleSheet.create({
+  maxWidth: {
+    maxWidth: "75%",
+  },
+});

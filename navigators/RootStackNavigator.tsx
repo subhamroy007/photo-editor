@@ -1,11 +1,18 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { RootStackNavigatorParams } from "../constants/types";
-import { Chat } from "../screens/root-stacks/Chat";
+import { Chat } from "../screens/root-bottom-tabs/Chat";
 import { CreateContent } from "../screens/root-stacks/CreateContent";
 import { TempScreen } from "../screens/TempScreen";
 import { CloseToMe } from "../screens/root-stacks/CloseToMe";
 import { RootBottomTabNavigatior } from "./RootBottomTabNavigator";
-import { LikesScreen } from "../screens/root-stacks/LikesScreen";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Account } from "../screens/root-stacks/Account";
+import { Audio } from "../screens/root-stacks/Audio";
+import { Effect } from "../screens/root-stacks/Effect";
+import { Hashtag } from "../screens/root-stacks/Hashtag";
+import { Likes } from "../screens/root-stacks/Likes";
+import { Location } from "../screens/root-stacks/Location";
+import { Post } from "../screens/root-stacks/Post";
+import { Story } from "../screens/root-stacks/Story";
 
 const Tab = createNativeStackNavigator<RootStackNavigatorParams>();
 
@@ -51,11 +58,52 @@ export function RootStackNavigator() {
         getId={() => "close-to-me"}
       />
       <Tab.Screen
-        name="LikesScreen"
-        component={LikesScreen}
+        name="Account"
+        component={Account}
+        navigationKey="account"
+        getId={() => "account"}
+      />
+      <Tab.Screen
+        name="Audio"
+        component={Audio}
+        navigationKey="Audio"
+        getId={() => "Audio"}
+      />
+      <Tab.Screen
+        name="Effect"
+        component={Effect}
+        navigationKey="effect"
+        getId={() => "effect"}
+      />
+      <Tab.Screen
+        name="Hashtag"
+        component={Hashtag}
+        navigationKey="hashtag"
+        getId={() => "hashtag"}
+      />
+      <Tab.Screen
+        name="Likes"
+        component={Likes}
         navigationKey="likes"
         getId={() => "likes"}
-        options={{ presentation: "transparentModal" }}
+      />
+      <Tab.Screen
+        name="Location"
+        component={Location}
+        navigationKey="location"
+        getId={() => "location"}
+      />
+      <Tab.Screen
+        name="Post"
+        component={Post}
+        navigationKey="post"
+        getId={() => "post"}
+      />
+      <Tab.Screen
+        name="Story"
+        component={Story}
+        navigationKey="account"
+        getId={() => "account"}
       />
     </Tab.Navigator>
   );

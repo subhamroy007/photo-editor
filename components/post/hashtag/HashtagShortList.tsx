@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, ListRenderItemInfo, Pressable, View } from "react-native";
 import { COLOR_5, SIZE_15, SIZE_5 } from "../../../constants/constants";
-import { HASHTAG_RESPONSE } from "../../../constants/data";
+import { [] } from "../../../constants/data";
 import { globalStyles } from "../../../constants/style";
 import { HashtagResponse } from "../../../constants/types";
-import { AppIcon } from "../../utility/AppIcon";
-import { AppLabel } from "../../utility/AppLabel";
+import { Icon } from "../../utility/Icon";
+import { Label } from "../../utility/Label";
 import { AppLoadingIndicator } from "../../utility/AppLoadingIndicator";
 import { HashtagShortListItem } from "./HashtagShortListItem";
 
@@ -37,7 +37,7 @@ export function HashtagShortList({
       }
       timeoutRef.current = setTimeout(() => {
         setSearchState({
-          hashtags: HASHTAG_RESPONSE,
+          hashtags: [],
           isError: false,
           isLoading: false,
         });
@@ -74,7 +74,7 @@ export function HashtagShortList({
           <AppLoadingIndicator color={COLOR_5} size="small" />
         ) : searchState.isError ? (
           <Pressable onPress={retryHandler}>
-            <AppIcon
+            <Icon
               name="undo"
               size="small"
               gap="medium"
@@ -83,7 +83,7 @@ export function HashtagShortList({
             />
           </Pressable>
         ) : (
-          <AppLabel text="no hashtag found" foreground={COLOR_5} />
+          <Label text="no hashtag found" foreground={COLOR_5} />
         )}
       </View>
     );

@@ -105,6 +105,12 @@ export const globalStyles = StyleSheet.create({
   primaryLightBorderColor: {
     borderColor: COLOR_19,
   },
+  secondaryDarkBorderColor: {
+    borderColor: COLOR_7,
+  },
+  secondaryLightBorderColor: {
+    borderColor: COLOR_8,
+  },
   primaryTopBorderWidth: {
     borderTopWidth: StyleSheet.hairlineWidth,
   },
@@ -117,14 +123,8 @@ export const globalStyles = StyleSheet.create({
   secondaryBottomBorderWidth: {
     borderBottomWidth: 2 * StyleSheet.hairlineWidth,
   },
-  semiTransparentBackgroundColor1: {
-    backgroundColor: COLOR_6,
-  },
-  semiTransparentBackgroundColor2: {
+  semiTransparentBackgroundColor: {
     backgroundColor: COLOR_11,
-  },
-  semiTransparentBackgroundColor3: {
-    backgroundColor: COLOR_9,
   },
   paddingHorizontalSize1: {
     paddingHorizontal: SIZE_7,
@@ -255,8 +255,14 @@ export const globalStyles = StyleSheet.create({
   marginLeftSize7: {
     marginLeft: SIZE_9,
   },
+  marginLeftAuto: {
+    marginLeft: "auto",
+  },
   marginRightSize7: {
     marginRight: SIZE_9,
+  },
+  marginRightAuto: {
+    marginRight: "auto",
   },
   marginTopSize7: {
     marginTop: SIZE_9,
@@ -288,12 +294,20 @@ export const globalStyles = StyleSheet.create({
   marginBottomSize9: {
     marginBottom: SIZE_12,
   },
+  borderTopRadiusSize2: {
+    borderTopLeftRadius: SIZE_4,
+    borderTopRightRadius: SIZE_4,
+  },
+  borderBottomRadiusSize2: {
+    borderBottomLeftRadius: SIZE_4,
+    borderBottomRightRadius: SIZE_4,
+  },
   borderTopRadiusSize3: {
-    borderTopStartRadius: SIZE_5,
-    borderTopEndRadius: SIZE_5,
+    borderTopLeftRadius: SIZE_5,
+    borderTopRightRadius: SIZE_5,
   },
   borderBottomRadiusSize3: {
-    borderBottomStartRadius: SIZE_5,
-    borderBottomEndRadius: SIZE_5,
+    borderBottomLeftRadius: SIZE_5,
+    borderBottomRightRadius: SIZE_5,
   },
 });
